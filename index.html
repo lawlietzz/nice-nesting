@@ -1,0 +1,2892 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0c0f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="app-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="app-icon-512.png">
+  <title>Nice nesting</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0c0f;
+      --panel: #111317;
+      --panel-2: #17191e;
+      --ink: #f1f2f4;
+      --muted: #969ba5;
+      --line: #292c33;
+      --accent: #df2029;
+      --accent-2: #ff3b43;
+      --bad: #ff5b62;
+      --ok: #59c58d;
+      --warn: #e9ad54;
+      --shadow: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(11, 12, 15, .96);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    h1::before {
+      content: "";
+      display: inline-block;
+      width: 5px;
+      height: 22px;
+      margin-right: 10px;
+      background: var(--accent);
+      vertical-align: -3px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px;
+      min-height: calc(100vh - 68px);
+    }
+
+    aside, .workspace {
+      min-width: 0;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      padding: 15px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .section {
+      display: grid;
+      gap: 10px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 650;
+      color: #d8dae0;
+      text-transform: uppercase;
+      border-left: 3px solid var(--accent);
+      padding-left: 9px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 0;
+    }
+
+    input, select, button {
+      font: inherit;
+    }
+
+    input:not([type="file"]):not([type="checkbox"]), select {
+      width: 100%;
+      border: 1px solid #343840;
+      border-radius: 5px;
+      padding: 9px 10px;
+      background: #0d0f12;
+      color: var(--ink);
+      min-height: 38px;
+      outline: none;
+    }
+
+    input:not([type="file"]):not([type="checkbox"]):focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(223, 32, 41, .16);
+    }
+
+    input[type="file"] {
+      width: 100%;
+      border: 1px dashed #454a54;
+      border-radius: 5px;
+      padding: 14px;
+      background: #0d0f12;
+      color: var(--muted);
+    }
+
+    button {
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 8px 11px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 650;
+      min-height: 36px;
+      transition: border-color .15s ease, background .15s ease, color .15s ease;
+    }
+
+    button:hover:not(:disabled) { background: #f12a33; }
+
+    button.secondary {
+      background: #16181d;
+      color: #c5c8cf;
+      border-color: #30343c;
+    }
+
+    button.secondary:hover:not(:disabled) {
+      background: #211214;
+      color: #fff;
+      border-color: #6c252a;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .action-row button {
+      min-width: 0;
+      padding-inline: 7px;
+      font-size: 12px;
+    }
+
+    .link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: 6px 9px;
+      color: #c5c8cf;
+      background: #16181d;
+      border: 1px solid #30343c;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .link-button:hover { color: #fff; border-color: #6c252a; background: #211214; }
+
+    .progress-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    progress {
+      width: 100%;
+      height: 8px;
+      accent-color: var(--accent);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 74px;
+      resize: vertical;
+      border: 1px solid #343840;
+      border-radius: 5px;
+      padding: 9px 10px;
+      background: #0d0f12;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    dialog {
+      width: min(920px, calc(100vw - 24px));
+      max-height: calc(100vh - 24px);
+      padding: 0;
+      color: var(--ink);
+      background: var(--panel);
+      border: 1px solid #343840;
+      border-radius: 7px;
+    }
+
+    dialog::backdrop { background: rgba(0, 0, 0, .72); }
+    .dialog-head, .dialog-tools { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    .dialog-head { justify-content: space-between; }
+    .dialog-head h2 { margin: 0; font-size: 17px; }
+    .dialog-tools input { flex: 1; }
+    .dialog-body { max-height: 64vh; overflow: auto; padding: 12px 14px; }
+    .project-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+    .project-actions button { min-height: 30px; padding: 5px 8px; font-size: 11px; }
+    .storage-toggle button.active { color: #fff; background: #2a1114; border-color: var(--accent); }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .switch-row input {
+      width: 18px;
+      height: 18px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .production-context {
+      display: flex;
+      align-items: center;
+      gap: 8px 18px;
+      flex-wrap: wrap;
+      min-height: 40px;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      color: var(--muted);
+      background: #111317;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--accent);
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    .production-context strong {
+      margin-left: 5px;
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 13px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric strong {
+      display: block;
+      color: #fff;
+      font-size: 23px;
+      line-height: 1.15;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 6px 6px 0 0;
+    }
+
+    .tab {
+      background: #191b20;
+      color: #b8bbc3;
+      padding: 7px 10px;
+      border-radius: 5px;
+      border: 1px solid #30333a;
+      font-weight: 700;
+      min-height: 34px;
+    }
+
+    .tab.active {
+      background: #2a1114;
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .canvas-wrap {
+      background: #0e1013;
+      padding: 14px;
+      border-radius: 0 0 6px 6px;
+      overflow: auto;
+      min-height: 420px;
+    }
+
+    canvas {
+      display: block;
+      background: #fbfcfd;
+      border: 1px solid #363a43;
+      border-radius: 4px;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .tables {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #181a1f;
+      color: #c7cad0;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td input {
+      max-width: 82px;
+    }
+
+    .status {
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status.error { color: var(--bad); }
+    .status.ok { color: var(--ok); }
+    .status.warn { color: var(--warn); }
+
+    .empty {
+      min-height: 300px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #241215;
+      color: #ff858a;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .summary, .tables {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      main {
+        padding: 10px;
+      }
+
+      .field-grid, .summary, .tables {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Nice nesting</h1>
+    <div class="header-actions">
+      <button class="secondary" id="clearBtn" type="button">Clear</button>
+      <button class="secondary" id="csvBtn" type="button" disabled>Export CSV</button>
+      <button class="secondary" id="dxfBtn" type="button" disabled>Export DXF</button>
+      <button class="secondary" id="pdfBtn" type="button" disabled>Export PDF</button>
+      <button class="secondary" id="manageProjectsBtn" type="button">Projects</button>
+      <button class="secondary" id="cancelNestingBtn" type="button" hidden>Cancel</button>
+      <button id="runBtn" type="button" disabled>คำนวณ Nesting</button>
+    </div>
+  </header>
+
+  <main>
+    <aside>
+      <div class="panel controls">
+        <div class="section">
+          <div class="section-title">ไฟล์ DXF</div>
+          <input id="fileInput" type="file" accept=".dxf,.DXF" multiple>
+          <div class="status" id="fileStatus">เลือกไฟล์ DXF ได้หลายไฟล์พร้อมกัน</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">ข้อมูลสั่งผลิต</div>
+          <div class="field-grid">
+            <label>รหัสงาน
+              <input id="orderCode" type="text" placeholder="เช่น PJ-2026-001">
+            </label>
+            <label>วัสดุ
+              <input id="material" type="text" list="materialOptions" value="Aluminium Composite" placeholder="เช่น ACP, Aluminium">
+              <datalist id="materialOptions">
+                <option value="Aluminium Composite"></option>
+                <option value="Aluminium"></option>
+                <option value="Stainless Steel"></option>
+                <option value="Mild Steel"></option>
+                <option value="Acrylic"></option>
+              </datalist>
+            </label>
+            <label>ความหนา (มม.)
+              <input id="thickness" type="number" min="0" step="0.1" value="4">
+            </label>
+          </div>
+          <input id="customer" type="hidden">
+          <input id="dueDate" type="hidden">
+          <input id="operatorName" type="hidden">
+          <label>หมายเหตุ
+            <textarea id="productionNotes" placeholder="รายละเอียดสำหรับฝ่ายผลิต"></textarea>
+          </label>
+        </div>
+
+        <div class="section">
+          <div class="section-title">ขนาดแผ่น</div>
+          <div class="field-grid">
+            <label>กว้าง
+              <input id="sheetW" type="number" min="1" step="1" value="1220">
+            </label>
+            <label>ยาว
+              <input id="sheetH" type="number" min="1" step="1" value="2440">
+            </label>
+            <label>ระยะห่างชิ้น
+              <input id="gap" type="number" min="0" step="0.1" value="5">
+            </label>
+            <label>ขอบแผ่น
+              <input id="margin" type="number" min="0" step="0.1" value="10">
+            </label>
+            <label>Kerf / รอยตัด
+              <input id="kerf" type="number" min="0" step="0.1" value="0">
+            </label>
+            <label>ทิศทางลาย
+              <select id="grainDirection">
+                <option value="none">ไม่มีข้อจำกัด</option>
+                <option value="fixed">ตามแนวไฟล์ DXF</option>
+              </select>
+            </label>
+          </div>
+          <label class="switch-row">
+            <span>อนุญาตหมุน 90 องศา</span>
+            <input id="allowRotate" type="checkbox" checked>
+          </label>
+        </div>
+
+        <div class="section">
+          <div class="section-title">วิธีจัดวาง</div>
+          <select id="sortMode">
+            <option value="area">ชิ้นใหญ่ก่อน</option>
+            <option value="height">ชิ้นสูงก่อน</option>
+            <option value="width">ชิ้นกว้างก่อน</option>
+            <option value="file">ตามลำดับไฟล์</option>
+            <option value="random">สุ่มหลายรอบ</option>
+          </select>
+          <label>จำนวนรอบสุ่ม
+            <input id="randomPasses" type="number" min="0" max="1000" step="10" value="120">
+          </label>
+          <div class="progress-row" id="nestingProgressRow" hidden>
+            <progress id="nestingProgress" max="100" value="0"></progress>
+            <span id="nestingProgressText">0%</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">บันทึกในเครื่อง</div>
+          <div class="action-row">
+            <button class="secondary" id="saveLocalBtn" type="button" disabled>Save</button>
+            <button class="secondary" id="loadLocalBtn" type="button">Load</button>
+            <button class="secondary" id="deleteLocalBtn" type="button">Delete</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Google Sheet Online</div>
+          <input id="onlineApiUrl" type="hidden">
+          <input id="onlineApiSecret" type="hidden">
+          <input id="rememberOnlineSecret" type="checkbox" hidden checked>
+          <div class="action-row">
+            <a class="link-button" href="https://docs.google.com/spreadsheets/d/1ZNaty8y2oog98U7KoeURukuMFGgHmlK9IpGk8qEQwc4/edit" target="_blank" rel="noopener">Open Sheet</a>
+            <a class="link-button" href="https://drive.google.com/drive/folders/1feVVavKqvCS_lRx-UJk5ofoGGrgIeoCE" target="_blank" rel="noopener">Open Drive</a>
+          </div>
+          <div class="action-row">
+            <button class="secondary" id="saveOnlineBtn" type="button" disabled>Save</button>
+            <button class="secondary" id="loadOnlineBtn" type="button">Load</button>
+            <button class="secondary" id="deleteOnlineBtn" type="button">Delete</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Export</div>
+          <label>รูปแบบ DXF
+            <select id="dxfExportMode">
+              <option value="merged">รวมทุกแผ่นในไฟล์เดียว</option>
+              <option value="split">แยกไฟล์ตามแผ่น</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="section">
+          <div class="section-title">รายการชิ้นงาน</div>
+          <div id="partsHolder" class="status">ยังไม่มีไฟล์</div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div class="production-context">
+        <span>โปรเจกต์<strong id="projectSummary">งานใหม่</strong></span>
+        <span>รหัสงาน<strong id="orderSummary">-</strong></span>
+        <span>วัสดุ<strong id="materialSummary">Aluminium Composite</strong></span>
+        <span>ความหนา<strong id="thicknessSummary">4 mm</strong></span>
+      </div>
+      <div class="summary">
+        <div class="metric"><strong id="sheetCount">0</strong><span>จำนวนแผ่น</span></div>
+        <div class="metric"><strong id="partCount">0</strong><span>จำนวนชิ้นรวม</span></div>
+        <div class="metric"><strong id="usedPercent">0%</strong><span>พื้นที่ใช้เฉลี่ย</span></div>
+        <div class="metric"><strong id="failCount">0</strong><span>ชิ้นที่วางไม่ได้</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="tabs" id="tabs"></div>
+        <div class="canvas-wrap">
+          <div id="emptyState" class="empty">อัปโหลด DXF แล้วกดคำนวณเพื่อดู layout ของแต่ละแผ่น</div>
+          <canvas id="preview" width="900" height="600" hidden></canvas>
+        </div>
+      </div>
+
+      <div class="tables">
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>ไฟล์</th>
+                <th>ขนาดอ่านได้</th>
+                <th>จำนวน</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="partsTable">
+              <tr><td colspan="4">ยังไม่มีข้อมูล</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>แผ่น</th>
+                <th>ชิ้น</th>
+                <th>ใช้พื้นที่</th>
+              </tr>
+            </thead>
+            <tbody id="sheetsTable">
+              <tr><td colspan="3">ยังไม่มีข้อมูล</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="projectDialog">
+    <div class="dialog-head"><h2>Project Manager</h2><button class="secondary" id="closeProjectDialogBtn" type="button">Close</button></div>
+    <div class="dialog-tools">
+      <div class="storage-toggle"><button class="secondary active" data-storage="online" type="button">Online</button><button class="secondary" data-storage="local" type="button">Local</button></div>
+      <input id="projectSearch" type="search" placeholder="ค้นหาชื่อ รหัสงาน ลูกค้า หรือวัสดุ">
+    </div>
+    <div class="dialog-body">
+      <div id="projectManagerStatus" class="status">กำลังโหลด...</div>
+      <table>
+        <thead><tr><th>โปรเจกต์</th><th>วัสดุ</th><th>แก้ไขล่าสุด</th><th>สถานะ</th><th></th></tr></thead>
+        <tbody id="projectManagerRows"></tbody>
+      </table>
+    </div>
+  </dialog>
+
+  <script>
+    const state = {
+      parts: [],
+      sheets: [],
+      failed: [],
+      activeSheet: 0,
+      projectId: makeProjectId(),
+      projectName: '',
+      projectCreatedAt: new Date().toISOString(),
+      projectRevision: 0,
+      nestingRunId: 0,
+      nestingBusy: false,
+      validationErrors: [],
+      managerStorage: 'online',
+      managerJobs: []
+    };
+
+    const els = {
+      fileInput: document.getElementById('fileInput'),
+      fileStatus: document.getElementById('fileStatus'),
+      partsHolder: document.getElementById('partsHolder'),
+      runBtn: document.getElementById('runBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      csvBtn: document.getElementById('csvBtn'),
+      dxfBtn: document.getElementById('dxfBtn'),
+      pdfBtn: document.getElementById('pdfBtn'),
+      manageProjectsBtn: document.getElementById('manageProjectsBtn'),
+      projectDialog: document.getElementById('projectDialog'),
+      closeProjectDialogBtn: document.getElementById('closeProjectDialogBtn'),
+      projectSearch: document.getElementById('projectSearch'),
+      projectManagerStatus: document.getElementById('projectManagerStatus'),
+      projectManagerRows: document.getElementById('projectManagerRows'),
+      saveLocalBtn: document.getElementById('saveLocalBtn'),
+      loadLocalBtn: document.getElementById('loadLocalBtn'),
+      deleteLocalBtn: document.getElementById('deleteLocalBtn'),
+      saveOnlineBtn: document.getElementById('saveOnlineBtn'),
+      loadOnlineBtn: document.getElementById('loadOnlineBtn'),
+      deleteOnlineBtn: document.getElementById('deleteOnlineBtn'),
+      onlineApiUrl: document.getElementById('onlineApiUrl'),
+      onlineApiSecret: document.getElementById('onlineApiSecret'),
+      rememberOnlineSecret: document.getElementById('rememberOnlineSecret'),
+      material: document.getElementById('material'),
+      thickness: document.getElementById('thickness'),
+      materialSummary: document.getElementById('materialSummary'),
+      thicknessSummary: document.getElementById('thicknessSummary'),
+      projectSummary: document.getElementById('projectSummary'),
+      orderSummary: document.getElementById('orderSummary'),
+      orderCode: document.getElementById('orderCode'),
+      customer: document.getElementById('customer'),
+      dueDate: document.getElementById('dueDate'),
+      operatorName: document.getElementById('operatorName'),
+      productionNotes: document.getElementById('productionNotes'),
+      sheetW: document.getElementById('sheetW'),
+      sheetH: document.getElementById('sheetH'),
+      gap: document.getElementById('gap'),
+      margin: document.getElementById('margin'),
+      kerf: document.getElementById('kerf'),
+      grainDirection: document.getElementById('grainDirection'),
+      allowRotate: document.getElementById('allowRotate'),
+      sortMode: document.getElementById('sortMode'),
+      randomPasses: document.getElementById('randomPasses'),
+      dxfExportMode: document.getElementById('dxfExportMode'),
+      sheetCount: document.getElementById('sheetCount'),
+      partCount: document.getElementById('partCount'),
+      usedPercent: document.getElementById('usedPercent'),
+      failCount: document.getElementById('failCount'),
+      partsTable: document.getElementById('partsTable'),
+      sheetsTable: document.getElementById('sheetsTable'),
+      tabs: document.getElementById('tabs'),
+      preview: document.getElementById('preview'),
+      emptyState: document.getElementById('emptyState')
+      ,cancelNestingBtn: document.getElementById('cancelNestingBtn')
+      ,nestingProgressRow: document.getElementById('nestingProgressRow')
+      ,nestingProgress: document.getElementById('nestingProgress')
+      ,nestingProgressText: document.getElementById('nestingProgressText')
+    };
+
+    const colors = [
+      '#0e7c86', '#946200', '#6b5fb5', '#257942', '#b1465a',
+      '#3971b9', '#8f4b15', '#43756f', '#9b517a', '#5d6c28'
+    ];
+
+    const LOCAL_DB_NAME = 'NiceNestingDB';
+    const LOCAL_DB_VERSION = 1;
+    const LOCAL_STORE = 'jobs';
+    const ONLINE_CONFIG_KEY = 'niceNestingOnlineConfigV4';
+    const ONLINE_DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzjhTuXgtPLHmlUN_f1R3_iqiON15ZGfzFlYtsl8Gfk6y_CXuzDXB8eD58hWLIwskOI/exec';
+    const ONLINE_DEFAULT_SECRET = '81e3e2f7fe894cc7a87faf2755229e8b';
+    const ONLINE_SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1ZNaty8y2oog98U7KoeURukuMFGgHmlK9IpGk8qEQwc4/edit';
+    const ONLINE_DRIVE_FOLDER_URL = 'https://drive.google.com/drive/folders/1feVVavKqvCS_lRx-UJk5ofoGGrgIeoCE';
+
+    els.fileInput.addEventListener('change', loadFiles);
+    els.runBtn.addEventListener('click', runNesting);
+    els.cancelNestingBtn.addEventListener('click', cancelNesting);
+    els.clearBtn.addEventListener('click', clearAll);
+    els.csvBtn.addEventListener('click', exportCsv);
+    els.dxfBtn.addEventListener('click', exportDxf);
+    els.pdfBtn.addEventListener('click', exportPdf);
+    els.manageProjectsBtn.addEventListener('click', () => openProjectManager('online'));
+    els.closeProjectDialogBtn.addEventListener('click', () => els.projectDialog.close());
+    els.projectSearch.addEventListener('input', renderProjectManagerRows);
+    els.projectManagerRows.addEventListener('click', handleProjectManagerAction);
+    document.querySelectorAll('[data-storage]').forEach(button => button.addEventListener('click', () => loadProjectManager(button.dataset.storage)));
+    els.saveLocalBtn.addEventListener('click', saveJobLocal);
+    els.loadLocalBtn.addEventListener('click', loadJobLocal);
+    els.deleteLocalBtn.addEventListener('click', deleteJobLocal);
+    els.saveOnlineBtn.addEventListener('click', saveJobOnline);
+    els.loadOnlineBtn.addEventListener('click', loadJobOnline);
+    els.deleteOnlineBtn.addEventListener('click', deleteJobOnline);
+    [els.onlineApiUrl, els.onlineApiSecret, els.rememberOnlineSecret].forEach(el => el.addEventListener('change', saveOnlineConfig));
+    [els.material, els.thickness, els.orderCode].forEach(el => el.addEventListener('input', renderProductionContext));
+    [els.sheetW, els.sheetH, els.gap, els.margin, els.kerf, els.grainDirection, els.allowRotate, els.sortMode, els.randomPasses].forEach(el => {
+      el.addEventListener('change', () => {
+        if (state.parts.length) runNesting();
+      });
+    });
+
+    async function loadFiles(event) {
+      const files = Array.from(event.target.files || []);
+      state.parts = [];
+      state.sheets = [];
+      state.validationErrors = [];
+      state.failed = [];
+      state.activeSheet = 0;
+
+      if (!files.length) {
+        render();
+        return;
+      }
+      resetProjectIdentity();
+
+      els.fileStatus.textContent = `กำลังอ่าน ${files.length} ไฟล์...`;
+      els.fileStatus.className = 'status';
+
+      const loaded = [];
+      for (const file of files) {
+        try {
+          const text = await file.text();
+          const parsed = parseDxf(text);
+          loaded.push({
+            id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${loaded.length}`,
+            name: file.name,
+            width: parsed.width,
+            height: parsed.height,
+            minX: parsed.minX,
+            minY: parsed.minY,
+            maxX: parsed.maxX,
+            maxY: parsed.maxY,
+            entityCount: parsed.entityCount,
+            entities: parsed.entities,
+            outline: parsed.outline,
+            sourceText: text,
+            quantity: inferQuantityFromName(file.name),
+            allowRotate: true,
+            error: parsed.entityCount ? '' : 'ไม่พบ geometry ที่รองรับ'
+          });
+        } catch (err) {
+          loaded.push({
+            id: `${Date.now()}-${loaded.length}`,
+            name: file.name,
+            width: 0,
+            height: 0,
+            entityCount: 0,
+            entities: [],
+            outline: [],
+            sourceText: '',
+            quantity: inferQuantityFromName(file.name),
+            allowRotate: true,
+            error: err.message || 'อ่านไฟล์ไม่ได้'
+          });
+        }
+      }
+
+      state.parts = loaded;
+      const okCount = loaded.filter(p => !p.error && p.width > 0 && p.height > 0).length;
+      els.fileStatus.textContent = `อ่านไฟล์สำเร็จ ${okCount}/${loaded.length} ไฟล์`;
+      els.fileStatus.className = okCount === loaded.length ? 'status ok' : 'status warn';
+      renderPartsControls();
+      render();
+      if (okCount) runNesting();
+    }
+
+    function parseDxf(text) {
+      const rawLines = text.replace(/\r/g, '').split('\n');
+      const pairs = [];
+      for (let i = 0; i < rawLines.length - 1; i += 2) {
+        pairs.push({ code: rawLines[i].trim(), value: rawLines[i + 1].trim() });
+      }
+
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      let entityCount = 0;
+      const entities = [];
+
+      const includePoint = (x, y) => {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      };
+
+      const includeCircle = (cx, cy, r) => {
+        if (!Number.isFinite(cx) || !Number.isFinite(cy) || !Number.isFinite(r)) return;
+        includePoint(cx - r, cy - r);
+        includePoint(cx + r, cy + r);
+      };
+
+      const collectEntityData = (startIndex) => {
+        const data = {};
+        let endIndex = startIndex + 1;
+        for (; endIndex < pairs.length && pairs[endIndex].code !== '0'; endIndex++) {
+          if (!data[pairs[endIndex].code]) data[pairs[endIndex].code] = [];
+          data[pairs[endIndex].code].push(pairs[endIndex].value);
+        }
+        return { data, endIndex };
+      };
+
+      const readPoints = (data) => {
+        const xs = (data['10'] || []).map(num);
+        const ys = (data['20'] || []).map(num);
+        const points = [];
+        for (let k = 0; k < Math.max(xs.length, ys.length); k++) {
+          if (Number.isFinite(xs[k]) && Number.isFinite(ys[k])) {
+            points.push({ x: xs[k], y: ys[k] });
+          }
+        }
+        return points;
+      };
+
+      for (let i = 0; i < pairs.length; i++) {
+        if (pairs[i].code !== '0') continue;
+        const type = pairs[i].value.toUpperCase();
+        if (!['LINE', 'LWPOLYLINE', 'POLYLINE', 'VERTEX', 'CIRCLE', 'ARC', 'SPLINE', 'ELLIPSE'].includes(type)) continue;
+
+        const { data } = collectEntityData(i);
+
+        if (type === 'LINE') {
+          const x1 = num(data['10']?.[0]);
+          const y1 = num(data['20']?.[0]);
+          const x2 = num(data['11']?.[0]);
+          const y2 = num(data['21']?.[0]);
+          includePoint(x1, y1);
+          includePoint(x2, y2);
+          if (Number.isFinite(x1) && Number.isFinite(y1) && Number.isFinite(x2) && Number.isFinite(y2)) {
+            entities.push({ type: 'LINE', x1, y1, x2, y2 });
+            entityCount++;
+          }
+        } else if (type === 'CIRCLE' || type === 'ARC') {
+          const cx = num(data['10']?.[0]);
+          const cy = num(data['20']?.[0]);
+          const r = Math.abs(num(data['40']?.[0]));
+          includeCircle(cx, cy, r);
+          if (Number.isFinite(cx) && Number.isFinite(cy) && Number.isFinite(r)) {
+            entities.push({
+              type,
+              cx,
+              cy,
+              r,
+              startAngle: num(data['50']?.[0]) || 0,
+              endAngle: num(data['51']?.[0]) || 360
+            });
+            entityCount++;
+          }
+        } else if (type === 'ELLIPSE') {
+          const cx = num(data['10']?.[0]);
+          const cy = num(data['20']?.[0]);
+          const mx = Math.abs(num(data['11']?.[0]));
+          const my = Math.abs(num(data['21']?.[0]));
+          const ratio = Math.abs(num(data['40']?.[0])) || 1;
+          const radius = Math.max(mx, my) * Math.max(1, ratio);
+          includeCircle(cx, cy, radius);
+          if (Number.isFinite(cx) && Number.isFinite(cy) && Number.isFinite(radius)) {
+            entities.push({ type: 'ELLIPSE_APPROX', cx, cy, rx: radius, ry: radius });
+            entityCount++;
+          }
+        } else if (type === 'POLYLINE') {
+          const points = [];
+          for (let j = i + 1; j < pairs.length; j++) {
+            if (pairs[j].code === '0' && pairs[j].value.toUpperCase() === 'SEQEND') break;
+            if (pairs[j].code !== '0' || pairs[j].value.toUpperCase() !== 'VERTEX') continue;
+            const vertex = collectEntityData(j).data;
+            const x = num(vertex['10']?.[0]);
+            const y = num(vertex['20']?.[0]);
+            if (Number.isFinite(x) && Number.isFinite(y)) points.push({ x, y });
+          }
+          points.forEach(p => includePoint(p.x, p.y));
+          if (points.length >= 2) {
+            entities.push({ type: 'LWPOLYLINE', points, closed: Boolean(Number(data['70']?.[0]) & 1) });
+            entityCount++;
+          }
+        } else if (type === 'VERTEX') {
+          const x = num(data['10']?.[0]);
+          const y = num(data['20']?.[0]);
+          includePoint(x, y);
+        } else {
+          let points = readPoints(data);
+          const fitXs = (data['11'] || []).map(num);
+          const fitYs = (data['21'] || []).map(num);
+          for (let k = 0; k < Math.max(fitXs.length, fitYs.length); k++) {
+            if (Number.isFinite(fitXs[k]) && Number.isFinite(fitYs[k])) {
+              points.push({ x: fitXs[k], y: fitYs[k] });
+            }
+          }
+          points.forEach(p => includePoint(p.x, p.y));
+          if (points.length >= 2) {
+            entities.push({ type: 'LWPOLYLINE', points, closed: Boolean(Number(data['70']?.[0]) & 1) });
+            entityCount++;
+          }
+        }
+      }
+
+      if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
+        return { width: 0, height: 0, minX: 0, minY: 0, maxX: 0, maxY: 0, entityCount, entities, outline: [] };
+      }
+
+      const outline = chooseOuterOutline(entities);
+
+      return {
+        width: round(maxX - minX),
+        height: round(maxY - minY),
+        minX,
+        minY,
+        maxX,
+        maxY,
+        entityCount,
+        entities,
+        outline
+      };
+    }
+
+    function chooseOuterOutline(entities) {
+      let best = [];
+      let bestArea = 0;
+      for (const entity of entities) {
+        if (entity.type !== 'LWPOLYLINE' || !entity.closed || entity.points.length < 3) continue;
+        const points = normalizePolygon(entity.points);
+        const area = Math.abs(polygonArea(points));
+        if (area > bestArea) {
+          best = points;
+          bestArea = area;
+        }
+      }
+      for (const loop of buildLineLoops(entities)) {
+        const area = Math.abs(polygonArea(loop));
+        if (area > bestArea) {
+          best = loop;
+          bestArea = area;
+        }
+      }
+      return best;
+    }
+
+    function buildLineLoops(entities) {
+      const lines = entities
+        .filter(entity => entity.type === 'LINE')
+        .map(entity => ({
+          a: { x: entity.x1, y: entity.y1 },
+          b: { x: entity.x2, y: entity.y2 }
+        }));
+      const unused = new Set(lines.map((_, index) => index));
+      const loops = [];
+
+      while (unused.size) {
+        const firstIndex = unused.values().next().value;
+        unused.delete(firstIndex);
+        const first = lines[firstIndex];
+        const start = first.a;
+        let current = first.b;
+        const points = [start, current];
+
+        let guard = 0;
+        while (!samePoint(current, start) && guard < lines.length + 5) {
+          guard++;
+          let foundIndex = -1;
+          let nextPoint = null;
+          for (const index of unused) {
+            const line = lines[index];
+            if (samePoint(line.a, current)) {
+              foundIndex = index;
+              nextPoint = line.b;
+              break;
+            }
+            if (samePoint(line.b, current)) {
+              foundIndex = index;
+              nextPoint = line.a;
+              break;
+            }
+          }
+          if (foundIndex < 0 || !nextPoint) break;
+          unused.delete(foundIndex);
+          current = nextPoint;
+          if (!samePoint(current, start)) points.push(current);
+        }
+
+        if (samePoint(current, start) && points.length >= 3) {
+          loops.push(normalizePolygon(points));
+        }
+      }
+
+      return loops;
+    }
+
+    function samePoint(a, b) {
+      return Math.abs(a.x - b.x) < 0.01 && Math.abs(a.y - b.y) < 0.01;
+    }
+
+    function normalizePolygon(points) {
+      const cleaned = points.filter(point => Number.isFinite(point.x) && Number.isFinite(point.y));
+      if (cleaned.length > 1) {
+        const first = cleaned[0];
+        const last = cleaned[cleaned.length - 1];
+        if (Math.abs(first.x - last.x) < 0.001 && Math.abs(first.y - last.y) < 0.001) cleaned.pop();
+      }
+      return cleaned;
+    }
+
+    function polygonArea(points) {
+      let area = 0;
+      for (let i = 0; i < points.length; i++) {
+        const a = points[i];
+        const b = points[(i + 1) % points.length];
+        area += a.x * b.y - b.x * a.y;
+      }
+      return area / 2;
+    }
+
+    function num(value) {
+      const n = Number.parseFloat(value);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    function round(value) {
+      return Math.round(value * 100) / 100;
+    }
+
+    function inferQuantityFromName(name) {
+      const match = String(name).match(/(?:__|_|-|\s)(\d+)\s*(?:pcs?|ชิ้น)?(?=\.dxf$|$)/i);
+      if (!match) return 1;
+      const quantity = Number.parseInt(match[1], 10);
+      return Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+    }
+
+    function renderPartsControls() {
+      if (!state.parts.length) {
+        els.partsHolder.innerHTML = 'ยังไม่มีไฟล์';
+        return;
+      }
+
+      const holder = document.createElement('div');
+      holder.style.display = 'grid';
+      holder.style.gap = '8px';
+
+      for (const part of state.parts) {
+        const row = document.createElement('label');
+        row.style.gridTemplateColumns = 'minmax(0,1fr) 68px 28px';
+        row.style.alignItems = 'center';
+        row.style.color = 'var(--ink)';
+        row.innerHTML = `<span title="${escapeHtml(part.name)}">${escapeHtml(part.name)}</span>`;
+        const qty = document.createElement('input');
+        qty.type = 'number';
+        qty.min = '0';
+        qty.step = '1';
+        qty.value = String(part.quantity);
+        qty.addEventListener('change', () => {
+          part.quantity = Math.max(0, Math.floor(Number(qty.value) || 0));
+          qty.value = String(part.quantity);
+          runNesting();
+        });
+        row.appendChild(qty);
+        const rotate = document.createElement('input');
+        rotate.type = 'checkbox';
+        rotate.checked = part.allowRotate !== false;
+        rotate.title = 'อนุญาตให้หมุนชิ้นนี้';
+        rotate.addEventListener('change', () => {
+          part.allowRotate = rotate.checked;
+          runNesting();
+        });
+        row.appendChild(rotate);
+        holder.appendChild(row);
+      }
+
+      els.partsHolder.innerHTML = '';
+      els.partsHolder.appendChild(holder);
+    }
+
+    async function runNesting() {
+      const runId = ++state.nestingRunId;
+      const sheetW = positive(els.sheetW.value);
+      const sheetH = positive(els.sheetH.value);
+      const gap = Math.max(0, Number(els.gap.value) || 0) + Math.max(0, Number(els.kerf.value) || 0);
+      const margin = Math.max(0, Number(els.margin.value) || 0);
+      const allowRotate = els.allowRotate.checked && els.grainDirection.value === 'none';
+
+      if (!sheetW || !sheetH) {
+        els.fileStatus.textContent = 'กรุณาใส่ขนาดแผ่นให้ถูกต้อง';
+        els.fileStatus.className = 'status error';
+        return;
+      }
+
+      const usableW = sheetW - margin * 2;
+      const usableH = sheetH - margin * 2;
+      const items = [];
+      const failed = [];
+
+      state.parts.forEach((part, index) => {
+        const qty = Math.max(0, Math.floor(Number(part.quantity) || 0));
+        for (let i = 0; i < qty; i++) {
+          if (part.error || part.width <= 0 || part.height <= 0) {
+            failed.push({ part, reason: part.error || 'ขนาดไม่ถูกต้อง' });
+          } else if (!fitsEither(part.width, part.height, usableW, usableH, allowRotate && part.allowRotate !== false)) {
+            failed.push({ part, reason: 'ใหญ่กว่าแผ่น' });
+          } else {
+            items.push({
+              key: `${part.id}-${i}`,
+              part,
+              partIndex: index,
+              width: part.width,
+              height: part.height,
+              area: part.width * part.height
+            });
+          }
+        }
+      });
+
+      const randomPasses = Math.max(0, Math.min(1000, Math.floor(Number(els.randomPasses.value) || 0)));
+      setNestingBusy(true, 0);
+      try {
+        const result = await packWithBestStrategy(items, sheetW, sheetH, margin, gap, allowRotate, els.sortMode.value, randomPasses, runId);
+        if (!result || runId !== state.nestingRunId) return;
+        state.sheets = result.sheets;
+        state.failed = failed.concat(result.failed);
+        state.validationErrors = validateLayout(state.sheets, sheetW, sheetH, gap);
+        state.activeSheet = 0;
+        render();
+        setStatus(state.validationErrors.length
+          ? `พบปัญหา layout ${state.validationErrors.length} จุด กรุณาคำนวณใหม่ก่อน Export`
+          : `คำนวณเสร็จ ${state.sheets.length} แผ่น`, state.validationErrors.length ? 'error' : 'ok');
+      } finally {
+        if (runId === state.nestingRunId) {
+          setNestingBusy(false, 100);
+          render();
+        }
+      }
+    }
+
+    function cancelNesting() {
+      state.nestingRunId += 1;
+      setNestingBusy(false, 0);
+      setStatus('ยกเลิกการคำนวณแล้ว', 'warn');
+    }
+
+    function setNestingBusy(busy, percent) {
+      state.nestingBusy = busy;
+      els.runBtn.disabled = busy || !state.parts.length;
+      els.cancelNestingBtn.hidden = !busy;
+      els.nestingProgressRow.hidden = !busy;
+      els.nestingProgress.value = percent;
+      els.nestingProgressText.textContent = `${Math.round(percent)}%`;
+    }
+
+    function nextFrame() {
+      return new Promise(resolve => requestAnimationFrame(resolve));
+    }
+
+    function positive(value) {
+      const n = Number(value);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    }
+
+    function fitsEither(w, h, maxW, maxH, rotate) {
+      return (w <= maxW && h <= maxH) || (rotate && h <= maxW && w <= maxH);
+    }
+
+    function sortItems(items, mode) {
+      if (mode === 'file') return;
+      if (mode === 'random') {
+        shuffle(items);
+        return;
+      }
+      const sorters = {
+        area: (a, b) => b.area - a.area,
+        height: (a, b) => Math.max(b.height, b.width) - Math.max(a.height, a.width),
+        width: (a, b) => Math.max(b.width, b.height) - Math.max(a.width, a.height),
+        perimeter: (a, b) => (b.width + b.height) - (a.width + a.height),
+        shortSide: (a, b) => Math.min(b.width, b.height) - Math.min(a.width, a.height)
+      };
+      items.sort(sorters[mode] || sorters.area);
+    }
+
+    async function packWithBestStrategy(items, sheetW, sheetH, margin, gap, allowRotate, preferredMode, randomPasses, runId) {
+      const modes = preferredMode === 'file'
+        ? ['file', 'area', 'height', 'width', 'perimeter', 'shortSide']
+        : [preferredMode, 'area', 'height', 'width', 'perimeter', 'shortSide', 'file'];
+      let best = null;
+
+      const uniqueModes = [...new Set(modes)].filter(mode => mode !== 'random');
+      const passes = preferredMode === 'random' ? Math.max(randomPasses, 180) : randomPasses;
+      const totalSteps = Math.max(1, uniqueModes.length + passes);
+      let completed = 0;
+      for (const mode of uniqueModes) {
+        if (runId !== state.nestingRunId) return null;
+        const sorted = items.map(item => ({ ...item }));
+        sortItems(sorted, mode);
+        const result = packItems(sorted, sheetW, sheetH, margin, gap, allowRotate, mode);
+        if (!best || comparePackResults(result, best) < 0) best = result;
+        completed += 1;
+        setNestingBusy(true, completed / totalSteps * 100);
+        await nextFrame();
+      }
+
+      for (let i = 0; i < passes; i++) {
+        if (runId !== state.nestingRunId) return null;
+        const shuffled = items.map(item => ({ ...item }));
+        shuffle(shuffled);
+        if (i % 3 === 0) shuffled.sort((a, b) => (b.area - a.area) + (Math.random() - 0.5) * Math.max(a.area, b.area) * 0.25);
+        if (i % 3 === 1) shuffled.sort((a, b) => (Math.max(b.width, b.height) - Math.max(a.width, a.height)) + (Math.random() - 0.5) * 120);
+        const result = packItems(shuffled, sheetW, sheetH, margin, gap, allowRotate, 'random');
+        if (!best || comparePackResults(result, best) < 0) best = result;
+        completed += 1;
+        if (i % 3 === 0 || i === passes - 1) {
+          setNestingBusy(true, completed / totalSteps * 100);
+          await nextFrame();
+        }
+      }
+
+      return best || { sheets: [], failed: [] };
+    }
+
+    function shuffle(items) {
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+    }
+
+    function packItems(items, sheetW, sheetH, margin, gap, allowRotate, mode) {
+      const usableW = sheetW - margin * 2;
+      const usableH = sheetH - margin * 2;
+      const sheets = [];
+      const failed = [];
+
+      for (const item of items) {
+        let placed = false;
+        for (const sheet of sheets) {
+          placed = tryPlace(sheet, item, gap, allowRotate);
+          if (placed) break;
+        }
+        if (!placed) {
+          const sheet = { id: sheets.length + 1, placements: [], free: [{ x: margin, y: margin, w: usableW, h: usableH }], bounds: { x: margin, y: margin, w: usableW, h: usableH } };
+          if (tryPlace(sheet, item, gap, allowRotate)) {
+            sheets.push(sheet);
+          } else {
+            failed.push({ part: item.part, reason: 'วางไม่ได้' });
+          }
+        }
+      }
+
+      return { sheets, failed, score: packScore(sheets, sheetW, sheetH), mode };
+    }
+
+    function comparePackResults(a, b) {
+      if (a.failed.length !== b.failed.length) return a.failed.length - b.failed.length;
+      if (a.sheets.length !== b.sheets.length) return a.sheets.length - b.sheets.length;
+      return b.score - a.score;
+    }
+
+    function packScore(sheets, sheetW, sheetH) {
+      const sheetArea = sheetW * sheetH;
+      if (!sheets.length || !sheetArea) return 0;
+      const usedArea = sheets.reduce((sum, sheet) => {
+        return sum + sheet.placements.reduce((sheetSum, p) => sheetSum + p.w * p.h, 0);
+      }, 0);
+      const compactness = sheets.reduce((sum, sheet) => {
+        if (!sheet.placements.length) return sum;
+        const minX = Math.min(...sheet.placements.map(p => p.x));
+        const minY = Math.min(...sheet.placements.map(p => p.y));
+        const maxX = Math.max(...sheet.placements.map(p => p.x + p.w));
+        const maxY = Math.max(...sheet.placements.map(p => p.y + p.h));
+        const boundsArea = Math.max(1, (maxX - minX) * (maxY - minY));
+        const sheetUsed = sheet.placements.reduce((sheetSum, p) => sheetSum + p.w * p.h, 0);
+        return sum + sheetUsed / boundsArea;
+      }, 0) / sheets.length;
+      const largestFree = sheets.reduce((sum, sheet) => {
+        const best = sheet.free.reduce((max, slot) => Math.max(max, slot.w * slot.h), 0);
+        return sum + best / sheetArea;
+      }, 0) / sheets.length;
+      return (usedArea / (sheets.length * sheetArea)) + compactness * 0.08 + largestFree * 0.02;
+    }
+
+    function tryPlace(sheet, item, gap, allowRotate) {
+      let best = null;
+      for (const candidate of makePlacementCandidates(sheet, item, gap, allowRotate && item.part.allowRotate !== false)) {
+        const rect = { x: candidate.x, y: candidate.y, w: candidate.w, h: candidate.h };
+        if (!isInsideBounds(rect, sheet.bounds) || hasCollision(rect, sheet.placements, gap, item.part, candidate.rotated)) continue;
+        const waste = nearestFreeWaste(sheet.free, rect, gap);
+        const compact = candidate.y * 0.02 + candidate.x * 0.003;
+        const score = waste + compact + (candidate.fromShape ? -5000 : 0);
+        if (!best || score < best.score) {
+          best = { ...candidate, score };
+        }
+      }
+
+      if (!best) return false;
+
+      const x = best.x;
+      const y = best.y;
+      sheet.placements.push({
+        x,
+        y,
+        w: best.w,
+        h: best.h,
+        rotated: best.rotated,
+        item,
+        color: colors[item.partIndex % colors.length]
+      });
+
+      splitFreeSpace(sheet, { x, y, w: best.w + gap, h: best.h + gap });
+      pruneFreeSpaces(sheet.free);
+      return true;
+    }
+
+    function makePlacementCandidates(sheet, item, gap, allowRotate) {
+      const candidates = [];
+      const rotations = allowRotate ? [false, true] : [false];
+      for (const rotated of rotations) {
+        const w = rotated ? item.height : item.width;
+        const h = rotated ? item.width : item.height;
+        for (const slot of sheet.free) {
+          if (w + gap <= slot.w && h + gap <= slot.h) {
+            candidates.push({ x: slot.x, y: slot.y, w, h, rotated, fromShape: false });
+          }
+        }
+        const xs = new Set([sheet.bounds.x]);
+        const ys = new Set([sheet.bounds.y]);
+        for (const placement of sheet.placements) {
+          const poly = getPlacementPolygon(placement);
+          const rectEdges = [
+            placement.x,
+            placement.x + placement.w + gap,
+            placement.x - w - gap
+          ];
+          const rectYs = [
+            placement.y,
+            placement.y + placement.h + gap,
+            placement.y - h - gap
+          ];
+          rectEdges.forEach(value => xs.add(round(value)));
+          rectYs.forEach(value => ys.add(round(value)));
+          for (const point of poly) {
+            xs.add(round(point.x + gap));
+            xs.add(round(point.x - w - gap));
+            ys.add(round(point.y + gap));
+            ys.add(round(point.y - h - gap));
+          }
+        }
+        for (const x of xs) {
+          for (const y of ys) {
+            candidates.push({ x, y, w, h, rotated, fromShape: true });
+          }
+        }
+      }
+      return candidates;
+    }
+
+    function nearestFreeWaste(free, rect, gap) {
+      let best = rect.w * rect.h * 10;
+      for (const slot of free) {
+        if (rect.x >= slot.x && rect.y >= slot.y && rect.x + rect.w + gap <= slot.x + slot.w && rect.y + rect.h + gap <= slot.y + slot.h) {
+          best = Math.min(best, slot.w * slot.h - rect.w * rect.h);
+        }
+      }
+      return best;
+    }
+
+    function isInsideBounds(rect, bounds) {
+      return rect.x >= bounds.x && rect.y >= bounds.y && rect.x + rect.w <= bounds.x + bounds.w && rect.y + rect.h <= bounds.y + bounds.h;
+    }
+
+    function splitFreeSpace(sheet, used) {
+      const nextFree = [];
+      for (const slot of sheet.free) {
+        if (!rectanglesOverlap(slot, used)) {
+          nextFree.push(slot);
+          continue;
+        }
+
+        const slotRight = slot.x + slot.w;
+        const slotBottom = slot.y + slot.h;
+        const usedRight = used.x + used.w;
+        const usedBottom = used.y + used.h;
+
+        if (used.x > slot.x) {
+          nextFree.push({ x: slot.x, y: slot.y, w: used.x - slot.x, h: slot.h });
+        }
+        if (usedRight < slotRight) {
+          nextFree.push({ x: usedRight, y: slot.y, w: slotRight - usedRight, h: slot.h });
+        }
+        if (used.y > slot.y) {
+          nextFree.push({ x: slot.x, y: slot.y, w: slot.w, h: used.y - slot.y });
+        }
+        if (usedBottom < slotBottom) {
+          nextFree.push({ x: slot.x, y: usedBottom, w: slot.w, h: slotBottom - usedBottom });
+        }
+      }
+      sheet.free = nextFree;
+    }
+
+    function pruneFreeSpaces(free) {
+      for (let i = free.length - 1; i >= 0; i--) {
+        if (free[i].w <= 0 || free[i].h <= 0) {
+          free.splice(i, 1);
+          continue;
+        }
+        for (let j = free.length - 1; j >= 0; j--) {
+          if (i === j) continue;
+          if (contains(free[j], free[i])) {
+            free.splice(i, 1);
+            break;
+          }
+        }
+      }
+      free.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+    }
+
+    function contains(a, b) {
+      return b.x >= a.x && b.y >= a.y && b.x + b.w <= a.x + a.w && b.y + b.h <= a.y + a.h;
+    }
+
+    function rectanglesOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function hasCollision(rect, placements, gap, part, rotated) {
+      const candidatePolygon = getPartPlacementPolygon(part, rect.x, rect.y, rect.w, rect.h, rotated);
+      return placements.some(placement => {
+        const guarded = {
+          x: placement.x - gap,
+          y: placement.y - gap,
+          w: placement.w + gap * 2,
+          h: placement.h + gap * 2
+        };
+        if (!rectanglesOverlap(rect, guarded)) return false;
+        const placedPolygon = getPlacementPolygon(placement);
+        if (!candidatePolygon.length || !placedPolygon.length) return true;
+        return polygonsOverlap(candidatePolygon, placedPolygon) || polygonDistance(candidatePolygon, placedPolygon) < gap - 0.001;
+      });
+    }
+
+    function polygonDistance(a, b) {
+      let minimum = Infinity;
+      for (let i = 0; i < a.length; i++) {
+        const a1 = a[i], a2 = a[(i + 1) % a.length];
+        for (let j = 0; j < b.length; j++) {
+          const b1 = b[j], b2 = b[(j + 1) % b.length];
+          minimum = Math.min(minimum, segmentDistance(a1, a2, b1, b2));
+          if (minimum <= 0.001) return 0;
+        }
+      }
+      return minimum;
+    }
+
+    function segmentDistance(a, b, c, d) {
+      if (segmentsIntersect(a, b, c, d)) return 0;
+      return Math.min(pointSegmentDistance(a, c, d), pointSegmentDistance(b, c, d), pointSegmentDistance(c, a, b), pointSegmentDistance(d, a, b));
+    }
+
+    function pointSegmentDistance(p, a, b) {
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const lengthSquared = dx * dx + dy * dy;
+      if (!lengthSquared) return Math.hypot(p.x - a.x, p.y - a.y);
+      const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSquared));
+      return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+    }
+
+    function validateLayout(sheets, sheetW, sheetH, gap) {
+      const errors = [];
+      for (const sheet of sheets) {
+        for (let i = 0; i < sheet.placements.length; i++) {
+          const p = sheet.placements[i];
+          const rect = { x: p.x, y: p.y, w: p.w, h: p.h };
+          if (p.x < 0 || p.y < 0 || p.x + p.w > sheetW || p.y + p.h > sheetH) errors.push(`Sheet ${sheet.id}: ${p.item.part.name} เกินขอบ`);
+          if (hasCollision(rect, sheet.placements.slice(0, i), gap, p.item.part, p.rotated)) errors.push(`Sheet ${sheet.id}: ${p.item.part.name} ทับ/ใกล้ชิ้นอื่นเกินไป`);
+        }
+      }
+      return errors;
+    }
+
+    function getPlacementPolygon(placement) {
+      return getPartPlacementPolygon(placement.item.part, placement.x, placement.y, placement.w, placement.h, placement.rotated);
+    }
+
+    function getPartPlacementPolygon(part, x, y, w, h, rotated) {
+      const outline = part?.outline && part.outline.length >= 3 ? part.outline : null;
+      if (!outline) return [
+        { x, y },
+        { x: x + w, y },
+        { x: x + w, y: y + h },
+        { x, y: y + h }
+      ];
+      return outline.map(point => transformPointForLayout(part, point.x, point.y, x, y, rotated));
+    }
+
+    function transformPointForLayout(part, px, py, x, y, rotated) {
+      const localX = px - part.minX;
+      const localY = py - part.minY;
+      if (rotated) {
+        return { x: x + localY, y: y + localX };
+      }
+      return { x: x + localX, y: y + (part.height - localY) };
+    }
+
+    function polygonsOverlap(a, b) {
+      for (let i = 0; i < a.length; i++) {
+        const a1 = a[i];
+        const a2 = a[(i + 1) % a.length];
+        for (let j = 0; j < b.length; j++) {
+          const b1 = b[j];
+          const b2 = b[(j + 1) % b.length];
+          if (segmentsIntersect(a1, a2, b1, b2)) return true;
+        }
+      }
+      return pointInPolygon(a[0], b) || pointInPolygon(b[0], a);
+    }
+
+    function segmentsIntersect(a, b, c, d) {
+      const d1 = direction(c, d, a);
+      const d2 = direction(c, d, b);
+      const d3 = direction(a, b, c);
+      const d4 = direction(a, b, d);
+      if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) return true;
+      return Math.abs(d1) < 0.001 && onSegment(c, d, a)
+        || Math.abs(d2) < 0.001 && onSegment(c, d, b)
+        || Math.abs(d3) < 0.001 && onSegment(a, b, c)
+        || Math.abs(d4) < 0.001 && onSegment(a, b, d);
+    }
+
+    function direction(a, b, c) {
+      return (c.x - a.x) * (b.y - a.y) - (b.x - a.x) * (c.y - a.y);
+    }
+
+    function onSegment(a, b, c) {
+      return c.x >= Math.min(a.x, b.x) - 0.001 && c.x <= Math.max(a.x, b.x) + 0.001
+        && c.y >= Math.min(a.y, b.y) - 0.001 && c.y <= Math.max(a.y, b.y) + 0.001;
+    }
+
+    function pointInPolygon(point, polygon) {
+      let inside = false;
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const a = polygon[i];
+        const b = polygon[j];
+        if ((a.y > point.y) !== (b.y > point.y) && point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y || 1e-9) + a.x) {
+          inside = !inside;
+        }
+      }
+      return inside;
+    }
+
+    function render() {
+      const totalParts = state.parts.reduce((sum, part) => sum + Math.max(0, Math.floor(Number(part.quantity) || 0)), 0);
+      const sheetArea = positive(els.sheetW.value) * positive(els.sheetH.value);
+      const usedArea = state.sheets.reduce((sum, sheet) => {
+        return sum + sheet.placements.reduce((s, p) => s + p.w * p.h, 0);
+      }, 0);
+      const avgUsed = state.sheets.length && sheetArea ? usedArea / (state.sheets.length * sheetArea) * 100 : 0;
+
+      els.sheetCount.textContent = String(state.sheets.length);
+      els.partCount.textContent = String(totalParts);
+      els.usedPercent.textContent = `${Math.round(avgUsed)}%`;
+      els.failCount.textContent = String(state.failed.length);
+      renderProductionContext();
+      const exportBlocked = !state.sheets.length || state.validationErrors.length > 0 || state.nestingBusy;
+      els.runBtn.disabled = !state.parts.length || state.nestingBusy;
+      els.csvBtn.disabled = exportBlocked;
+      els.dxfBtn.disabled = exportBlocked;
+      els.pdfBtn.disabled = exportBlocked;
+      els.saveLocalBtn.disabled = !state.parts.length;
+      els.saveOnlineBtn.disabled = !state.parts.length;
+
+      renderPartsTable();
+      renderSheetsTable();
+      renderTabs();
+      drawActiveSheet();
+    }
+
+    function renderProductionContext() {
+      const material = els.material.value.trim() || 'ไม่ระบุ';
+      const thickness = Math.max(0, Number(els.thickness.value) || 0);
+      els.projectSummary.textContent = state.projectName || 'งานใหม่';
+      els.projectSummary.title = state.projectId;
+      els.orderSummary.textContent = els.orderCode.value.trim() || '-';
+      els.materialSummary.textContent = material;
+      els.thicknessSummary.textContent = thickness ? `${format(thickness)} mm` : 'ไม่ระบุ';
+    }
+
+    function renderPartsTable() {
+      if (!state.parts.length) {
+        els.partsTable.innerHTML = '<tr><td colspan="4">ยังไม่มีข้อมูล</td></tr>';
+        return;
+      }
+
+      els.partsTable.innerHTML = state.parts.map(part => {
+        const size = part.width && part.height ? `${format(part.width)} x ${format(part.height)}` : '-';
+        const status = part.error ? `<span class="pill">${escapeHtml(part.error)}</span>` : `<span class="pill">${part.entityCount} entities</span>`;
+        return `<tr>
+          <td title="${escapeHtml(part.name)}">${escapeHtml(part.name)}</td>
+          <td>${size}</td>
+          <td>${part.quantity}</td>
+          <td>${status}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderSheetsTable() {
+      if (!state.sheets.length) {
+        els.sheetsTable.innerHTML = '<tr><td colspan="3">ยังไม่มีข้อมูล</td></tr>';
+        return;
+      }
+
+      const sheetArea = positive(els.sheetW.value) * positive(els.sheetH.value);
+      els.sheetsTable.innerHTML = state.sheets.map(sheet => {
+        const used = sheet.placements.reduce((sum, p) => sum + p.w * p.h, 0);
+        const percent = sheetArea ? Math.round(used / sheetArea * 100) : 0;
+        return `<tr>
+          <td>แผ่น ${sheet.id}</td>
+          <td>${sheet.placements.length}</td>
+          <td>${percent}%</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderTabs() {
+      els.tabs.innerHTML = '';
+      if (!state.sheets.length) {
+        return;
+      }
+
+      state.sheets.forEach((sheet, index) => {
+        const button = document.createElement('button');
+        button.className = `tab${index === state.activeSheet ? ' active' : ''}`;
+        button.type = 'button';
+        button.textContent = `แผ่น ${sheet.id}`;
+        button.addEventListener('click', () => {
+          state.activeSheet = index;
+          renderTabs();
+          drawActiveSheet();
+        });
+        els.tabs.appendChild(button);
+      });
+    }
+
+    function drawActiveSheet() {
+      const sheet = state.sheets[state.activeSheet];
+      if (!sheet) {
+        els.preview.hidden = true;
+        els.emptyState.hidden = false;
+        return;
+      }
+
+      els.preview.hidden = false;
+      els.emptyState.hidden = true;
+
+      const sheetW = positive(els.sheetW.value);
+      const sheetH = positive(els.sheetH.value);
+      const canvas = els.preview;
+      const maxW = Math.min(1100, Math.max(520, canvas.parentElement.clientWidth - 30));
+      const scale = Math.min(maxW / sheetW, 720 / sheetH);
+      canvas.width = Math.max(420, Math.ceil(sheetW * scale));
+      canvas.height = Math.max(280, Math.ceil(sheetH * scale));
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#fbfcfd';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#50616f';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, sheetW * scale - 2, sheetH * scale - 2);
+
+      const margin = Math.max(0, Number(els.margin.value) || 0);
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = '#aac0ca';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(margin * scale, margin * scale, (sheetW - margin * 2) * scale, (sheetH - margin * 2) * scale);
+      ctx.setLineDash([]);
+
+      sheet.placements.forEach((p, idx) => {
+        const x = p.x * scale;
+        const y = p.y * scale;
+        const w = p.w * scale;
+        const h = p.h * scale;
+        const polygon = getPlacementPolygon(p).map(point => ({ x: point.x * scale, y: point.y * scale }));
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = .82;
+        drawCanvasPolygon(ctx, polygon, x, y, w, h, true);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        drawCanvasPolygon(ctx, polygon, x, y, w, h, false);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.clip();
+        drawPlacementLabel(ctx, `${idx + 1}. ${p.item.part.name}${p.rotated ? ' R' : ''}`, x, y, w, h);
+        ctx.restore();
+      });
+
+      ctx.fillStyle = '#17212b';
+      ctx.font = '13px Segoe UI, Arial';
+      ctx.fillText(`${format(sheetW)} x ${format(sheetH)}`, 10, canvas.height - 12);
+    }
+
+    function drawCanvasPolygon(ctx, polygon, x, y, w, h, filled) {
+      if (!polygon || polygon.length < 3) {
+        if (filled) ctx.fillRect(x, y, w, h);
+        else ctx.strokeRect(x, y, w, h);
+        return;
+      }
+      ctx.beginPath();
+      ctx.moveTo(polygon[0].x, polygon[0].y);
+      for (let i = 1; i < polygon.length; i++) ctx.lineTo(polygon[i].x, polygon[i].y);
+      ctx.closePath();
+      if (filled) ctx.fill();
+      else ctx.stroke();
+    }
+
+    function drawPlacementLabel(ctx, text, x, y, w, h) {
+      const pad = 6;
+      const useVertical = h > w * 1.35 && w < 90;
+      ctx.fillStyle = '#fff';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+
+      if (useVertical) {
+        const maxTextWidth = Math.max(18, h - pad * 2);
+        const maxFont = Math.max(8, Math.min(16, w - pad * 2));
+        const fontSize = fitCanvasFont(ctx, text, maxTextWidth, maxFont, 7);
+        ctx.font = `${fontSize}px Segoe UI, Arial`;
+        ctx.save();
+        ctx.translate(x + pad + fontSize, y + h - pad);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+        return;
+      }
+
+      const maxTextWidth = Math.max(18, w - pad * 2);
+      const maxFont = Math.max(8, Math.min(18, h * 0.28));
+      const fontSize = fitCanvasFont(ctx, text, maxTextWidth, maxFont, 7);
+      ctx.font = `${fontSize}px Segoe UI, Arial`;
+      ctx.fillText(text, x + pad, y + Math.max(4, Math.min(10, h - fontSize - 2)));
+    }
+
+    function fitCanvasFont(ctx, text, maxWidth, startSize, minSize) {
+      let size = Math.floor(startSize);
+      while (size > minSize) {
+        ctx.font = `${size}px Segoe UI, Arial`;
+        if (ctx.measureText(text).width <= maxWidth) break;
+        size -= 1;
+      }
+      return size;
+    }
+
+    async function exportCsv() {
+      if (!state.sheets.length) return;
+      const rows = [
+        ['sheet', 'file', 'x', 'y', 'width', 'height', 'rotated']
+      ];
+      state.sheets.forEach(sheet => {
+        sheet.placements.forEach(p => {
+          rows.push([
+            sheet.id,
+            p.item.part.name,
+            round(p.x),
+            round(p.y),
+            round(p.w),
+            round(p.h),
+            p.rotated ? 'yes' : 'no'
+          ]);
+        });
+      });
+
+      const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n');
+      await downloadText('nesting-layout.csv', csv, 'text/csv;charset=utf-8');
+    }
+
+    async function exportPdf() {
+      if (!state.sheets.length) return;
+      const pdf = buildPdfSummary();
+      await downloadText('nesting-summary.pdf', pdf, 'application/pdf');
+    }
+
+    async function exportDxf() {
+      if (!state.sheets.length) return;
+
+      if (els.dxfExportMode.value === 'split') {
+        for (const sheet of state.sheets) {
+          const dxf = buildDxf([sheet], `SHEET ${sheet.id}`);
+          await downloadText(`nesting-sheet-${sheet.id}.dxf`, dxf, 'application/octet-stream;charset=utf-8');
+        }
+        setStatus(`สร้างไฟล์ DXF แยก ${state.sheets.length} แผ่นแล้ว`, 'ok');
+        return;
+      }
+
+      const dxf = buildDxf(state.sheets, 'ALL SHEETS');
+      await downloadText('nesting-layout.dxf', dxf, 'application/octet-stream;charset=utf-8');
+    }
+
+    function buildDxf(sheets, title) {
+      const sheetW = positive(els.sheetW.value);
+      const sheetH = positive(els.sheetH.value);
+      const gapBetweenSheets = Math.max(sheetW * 0.08, 100);
+      const lines = [];
+
+      addDxfHeader(lines);
+      addText(lines, 0, sheetH + 85, 26, `DXF NESTING - ${title}`, 'LABEL');
+
+      sheets.forEach((sheet, sheetIndex) => {
+        const offsetX = sheetIndex * (sheetW + gapBetweenSheets);
+        addRectangle(lines, offsetX, 0, sheetW, sheetH, 'SHEET');
+        addText(lines, offsetX + 20, sheetH + 35, 28, `SHEET ${sheet.id}`, 'LABEL');
+        addText(lines, offsetX + 20, -45, 20, `${format(sheetW)} x ${format(sheetH)}`, 'LABEL');
+
+        sheet.placements.forEach((p, index) => {
+          const x = offsetX + p.x;
+          const y = sheetH - p.y - p.h;
+          if (p.item.part.entities && p.item.part.entities.length) {
+            addTransformedPart(lines, p, offsetX, sheetH);
+          } else {
+            addRectangle(lines, x, y, p.w, p.h, 'PART');
+          }
+          addText(lines, x + 8, y + Math.max(16, p.h - 28), Math.min(24, Math.max(10, p.h / 10)), `${index + 1}. ${p.item.part.name}${p.rotated ? ' R' : ''}`, 'LABEL');
+        });
+      });
+
+      addDxfFooter(lines);
+      return lines.join('\n');
+    }
+
+    function buildPdfSummary() {
+      const pageW = 842, pageH = 595, margin = 34;
+      const pages = [];
+      const sheetW = positive(els.sheetW.value), sheetH = positive(els.sheetH.value);
+      const totalParts = state.parts.reduce((sum, part) => sum + Math.max(0, Math.floor(Number(part.quantity) || 0)), 0);
+      const metadata = [
+        `รหัสงาน: ${els.orderCode.value.trim() || '-'}    โปรเจกต์: ${state.projectName || 'งานใหม่'}`,
+        `วัสดุ: ${els.material.value.trim() || '-'}    ความหนา: ${format(Number(els.thickness.value) || 0)} mm`,
+        `ขนาดแผ่น: ${format(sheetW)} x ${format(sheetH)} mm    จำนวน ${state.sheets.length} แผ่น    ${totalParts} ชิ้น    ใช้พื้นที่เฉลี่ย ${els.usedPercent.textContent}`,
+        `วันที่ออกเอกสาร: ${new Date().toLocaleString('th-TH')}`
+      ];
+      let page = createCanvasPdfPage(pageW, pageH), ctx = page.ctx, y = 34;
+      drawPdfCanvasHeader(ctx, 'DXF Nesting Summary', state.projectName || 'Nice nesting');
+      y = 76; ctx.fillStyle = '#222'; ctx.font = '12px "Segoe UI", Tahoma, sans-serif';
+      metadata.forEach(line => { ctx.fillText(line, margin, y); y += 20; });
+      if (els.productionNotes.value.trim()) { ctx.fillStyle = '#555'; y = drawWrappedCanvasText(ctx, `หมายเหตุ: ${els.productionNotes.value.trim()}`, margin, y + 2, pageW - margin * 2, 16); }
+      y += 10; drawCanvasSectionTitle(ctx, 'BOM / สรุปวัสดุ', margin, y); y += 24;
+      ctx.fillStyle = '#222'; ctx.font = '12px "Segoe UI", Tahoma, sans-serif';
+      ctx.fillText(`${els.material.value.trim() || '-'} | ${format(Number(els.thickness.value) || 0)} mm | ${format(sheetW)} x ${format(sheetH)} mm | ${state.sheets.length} แผ่น`, margin, y);
+      y += 30; drawCanvasSectionTitle(ctx, 'รายการชิ้นงาน', margin, y); y += 23;
+      const drawTableHeader = () => { ctx.fillStyle = '#f1f1f2'; ctx.fillRect(margin, y - 15, pageW - margin * 2, 21); ctx.fillStyle = '#222'; ctx.font = 'bold 10px "Segoe UI", Tahoma, sans-serif'; ctx.fillText('ไฟล์', margin + 6, y); ctx.fillText('ขนาด', 460, y); ctx.fillText('จำนวน', 590, y); ctx.fillText('Entities', 660, y); y += 14; };
+      drawTableHeader();
+      for (const part of state.parts) {
+        if (y > pageH - 34) { pages.push(page.canvas.toDataURL('image/jpeg', .92)); page = createCanvasPdfPage(pageW, pageH); ctx = page.ctx; drawPdfCanvasHeader(ctx, 'รายการชิ้นงาน (ต่อ)', state.projectName || ''); y = 82; drawTableHeader(); }
+        ctx.fillStyle = '#222'; ctx.font = '10px "Segoe UI", Tahoma, sans-serif';
+        ctx.fillText(truncateText(part.name, 64), margin + 6, y); ctx.fillText(`${format(part.width)} x ${format(part.height)}`, 460, y); ctx.fillText(String(part.quantity), 590, y); ctx.fillText(String(part.entityCount), 660, y); y += 17;
+      }
+      pages.push(page.canvas.toDataURL('image/jpeg', .92));
+      for (const sheet of state.sheets) {
+        page = createCanvasPdfPage(pageW, pageH); ctx = page.ctx;
+        const used = sheet.placements.reduce((sum, p) => sum + p.w * p.h, 0), usedPercent = sheetW && sheetH ? Math.round(used / (sheetW * sheetH) * 100) : 0;
+        drawPdfCanvasHeader(ctx, `แผ่น ${sheet.id}`, `${sheet.placements.length} ชิ้น | ใช้พื้นที่ ${usedPercent}% | ${els.material.value.trim()} ${format(Number(els.thickness.value) || 0)} mm`);
+        const box = { x: margin, y: 82, w: pageW - margin * 2, h: pageH - 125 }, scale = Math.min(box.w / sheetW, box.h / sheetH), drawW = sheetW * scale, drawH = sheetH * scale, ox = box.x + (box.w - drawW) / 2, oy = box.y + (box.h - drawH) / 2;
+        ctx.fillStyle = '#fff'; ctx.fillRect(ox, oy, drawW, drawH); ctx.strokeStyle = '#111'; ctx.lineWidth = 1.2; ctx.strokeRect(ox, oy, drawW, drawH);
+        sheet.placements.forEach((p, index) => {
+          const polygon = getPlacementPolygon(p).map(point => ({ x: ox + point.x * scale, y: oy + point.y * scale })), x = ox + p.x * scale, py = oy + p.y * scale, w = p.w * scale, h = p.h * scale;
+          ctx.beginPath(); polygon.forEach((point, i) => i ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y)); ctx.closePath(); ctx.fillStyle = p.color; ctx.globalAlpha = .86; ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = '#222'; ctx.lineWidth = .7; ctx.stroke();
+          const label = `${index + 1}. ${truncateText(p.item.part.name, 38)}${p.rotated ? ' R' : ''}`; ctx.fillStyle = '#fff'; ctx.font = 'bold 7px "Segoe UI", Tahoma, sans-serif';
+          if (h > w * 1.35 && w > 10) { ctx.save(); ctx.translate(x + Math.min(w - 3, 9), py + 4); ctx.rotate(Math.PI / 2); ctx.fillText(label, 0, 0); ctx.restore(); } else if (w > 28 && h > 10) ctx.fillText(label, x + 3, py + 10);
+        });
+        ctx.fillStyle = '#444'; ctx.font = '10px "Segoe UI", Tahoma, sans-serif'; ctx.fillText(`${format(sheetW)} x ${format(sheetH)} mm | Kerf ${format(Number(els.kerf.value) || 0)} mm | Gap ${format(Number(els.gap.value) || 0)} mm`, margin, pageH - 24);
+        pages.push(page.canvas.toDataURL('image/jpeg', .92));
+      }
+      return makeJpegPdf(pages, pageW, pageH);
+    }
+
+    function createCanvasPdfPage(pageW, pageH) {
+      const canvas = document.createElement('canvas'); canvas.width = pageW * 2; canvas.height = pageH * 2;
+      const ctx = canvas.getContext('2d'); ctx.scale(2, 2); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, pageW, pageH); return { canvas, ctx };
+    }
+    function drawPdfCanvasHeader(ctx, title, subtitle) { ctx.fillStyle = '#0b0c0f'; ctx.fillRect(0, 0, 842, 58); ctx.fillStyle = '#df2029'; ctx.fillRect(0, 0, 8, 58); ctx.fillStyle = '#fff'; ctx.font = 'bold 20px "Segoe UI", Tahoma, sans-serif'; ctx.fillText(title, 34, 29); ctx.fillStyle = '#c5c8cf'; ctx.font = '10px "Segoe UI", Tahoma, sans-serif'; ctx.fillText(subtitle, 34, 46); }
+    function drawCanvasSectionTitle(ctx, title, x, y) { ctx.fillStyle = '#df2029'; ctx.fillRect(x, y - 14, 4, 18); ctx.fillStyle = '#17191e'; ctx.font = 'bold 13px "Segoe UI", Tahoma, sans-serif'; ctx.fillText(title, x + 11, y); }
+    function drawWrappedCanvasText(ctx, text, x, y, maxWidth, lineHeight) { const words = Array.from(String(text)); let line = ''; for (const word of words) { const test = line + word; if (ctx.measureText(test).width > maxWidth && line) { ctx.fillText(line, x, y); line = word; y += lineHeight; } else line = test; } if (line) { ctx.fillText(line, x, y); y += lineHeight; } return y; }
+    function makeJpegPdf(dataUrls, pageW, pageH) {
+      const objects = [], add = body => (objects.push(body), objects.length), pageRefs = [];
+      for (const url of dataUrls) { const binary = atob(url.split(',')[1]), imageId = add(`<< /Type /XObject /Subtype /Image /Width ${pageW * 2} /Height ${pageH * 2} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${binary.length} >>\nstream\n${binary}\nendstream`), content = `q ${pageW} 0 0 ${pageH} 0 0 cm /Im Do Q`, contentId = add(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`), pageId = add(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`); pageRefs.push(pageId); }
+      const pagesId = add(`<< /Type /Pages /Kids [${pageRefs.map(id => `${id} 0 R`).join(' ')}] /Count ${pageRefs.length} >>`), catalogId = add(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`); pageRefs.forEach(id => objects[id - 1] = objects[id - 1].replace('/Parent 0 0 R', `/Parent ${pagesId} 0 R`));
+      let pdf = '%PDF-1.4\n'; const offsets = [0]; objects.forEach((body, i) => { offsets.push(pdf.length); pdf += `${i + 1} 0 obj\n${body}\nendobj\n`; }); const xref = pdf.length; pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`; for (let i = 1; i < offsets.length; i++) pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`; pdf += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF`; return Uint8Array.from(pdf, char => char.charCodeAt(0));
+    }
+
+    function makePdf(pageContents, pageW, pageH) {
+      const objects = [];
+      const addObject = (body) => {
+        objects.push(body);
+        return objects.length;
+      };
+      const fontId = addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+      const contentIds = pageContents.map(content => addObject(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`));
+      const pageIds = contentIds.map(contentId => addObject(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`));
+      const pagesId = addObject(`<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`);
+      const catalogId = addObject(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+      for (const pageId of pageIds) {
+        objects[pageId - 1] = objects[pageId - 1].replace('/Parent 0 0 R', `/Parent ${pagesId} 0 R`);
+      }
+
+      let pdf = '%PDF-1.4\n';
+      const offsets = [0];
+      objects.forEach((body, index) => {
+        offsets.push(pdf.length);
+        pdf += `${index + 1} 0 obj\n${body}\nendobj\n`;
+      });
+      const xref = pdf.length;
+      pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+      for (let i = 1; i < offsets.length; i++) {
+        pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+      }
+      pdf += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF`;
+      return pdf;
+    }
+
+    function pdfText(lines, x, y, size, text, color = '0 0 0 rg') {
+      lines.push(`${color} BT /F1 ${size} Tf ${round(x)} ${round(y)} Td (${escapePdfText(text)}) Tj ET`);
+    }
+
+    function pdfTextRotated(lines, x, y, size, text, angleDeg, color = '0 0 0 rg') {
+      const radians = angleDeg * Math.PI / 180;
+      const cos = round(Math.cos(radians));
+      const sin = round(Math.sin(radians));
+      lines.push(`${color} BT /F1 ${size} Tf ${cos} ${sin} ${round(-sin)} ${cos} ${round(x)} ${round(y)} Tm (${escapePdfText(text)}) Tj ET`);
+    }
+
+    function pdfLine(lines, x1, y1, x2, y2) {
+      lines.push(`0 0 0 RG 0.5 w ${round(x1)} ${round(y1)} m ${round(x2)} ${round(y2)} l S`);
+    }
+
+    function pdfRect(lines, x, y, w, h, filled, colorCommand, lineWidth) {
+      if (colorCommand) lines.push(colorCommand);
+      lines.push(`${lineWidth} w ${round(x)} ${round(y)} ${round(w)} ${round(h)} re ${filled ? 'f' : 'S'}`);
+    }
+
+    function pdfPolygon(lines, polygon, filled, colorCommand, lineWidth) {
+      if (!polygon || polygon.length < 3) return;
+      if (colorCommand) lines.push(colorCommand);
+      const commands = [`${lineWidth} w`, `${round(polygon[0].x)} ${round(polygon[0].y)} m`];
+      for (let i = 1; i < polygon.length; i++) {
+        commands.push(`${round(polygon[i].x)} ${round(polygon[i].y)} l`);
+      }
+      commands.push('h', filled ? 'f' : 'S');
+      lines.push(commands.join(' '));
+    }
+
+    function escapePdfText(value) {
+      return String(value).replace(/[^\x20-\x7E]/g, '?').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+    }
+
+    function truncateText(value, maxLength) {
+      const text = String(value);
+      return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
+    }
+
+    function hexToPdfRgb(hex) {
+      const clean = String(hex).replace('#', '');
+      const r = parseInt(clean.slice(0, 2), 16) / 255;
+      const g = parseInt(clean.slice(2, 4), 16) / 255;
+      const b = parseInt(clean.slice(4, 6), 16) / 255;
+      return `${round(r)} ${round(g)} ${round(b)}`;
+    }
+
+    function addDxfHeader(lines) {
+      lines.push(
+        '0', 'SECTION',
+        '2', 'HEADER',
+        '9', '$ACADVER',
+        '1', 'AC1009',
+        '0', 'ENDSEC',
+        '0', 'SECTION',
+        '2', 'TABLES',
+        '0', 'TABLE',
+        '2', 'LAYER',
+        '70', '3'
+      );
+      addLayer(lines, 'SHEET', 7);
+      addLayer(lines, 'PART', 3);
+      addLayer(lines, 'LABEL', 2);
+      lines.push(
+        '0', 'ENDTAB',
+        '0', 'ENDSEC',
+        '0', 'SECTION',
+        '2', 'ENTITIES'
+      );
+    }
+
+    function addLayer(lines, name, color) {
+      lines.push(
+        '0', 'LAYER',
+        '2', name,
+        '70', '0',
+        '62', String(color),
+        '6', 'CONTINUOUS'
+      );
+    }
+
+    function addDxfFooter(lines) {
+      lines.push('0', 'ENDSEC', '0', 'EOF');
+    }
+
+    function addRectangle(lines, x, y, w, h, layer) {
+      lines.push(
+        '0', 'LWPOLYLINE',
+        '8', layer,
+        '90', '4',
+        '70', '1',
+        '10', dxfNumber(x),
+        '20', dxfNumber(y),
+        '10', dxfNumber(x + w),
+        '20', dxfNumber(y),
+        '10', dxfNumber(x + w),
+        '20', dxfNumber(y + h),
+        '10', dxfNumber(x),
+        '20', dxfNumber(y + h)
+      );
+    }
+
+    function addText(lines, x, y, height, text, layer) {
+      lines.push(
+        '0', 'TEXT',
+        '8', layer,
+        '10', dxfNumber(x),
+        '20', dxfNumber(y),
+        '40', dxfNumber(height),
+        '1', sanitizeDxfText(text)
+      );
+    }
+
+    function addTransformedPart(lines, placement, sheetOffsetX, sheetH) {
+      const part = placement.item.part;
+      const transform = makePartTransform(placement, sheetOffsetX, sheetH);
+      for (const entity of part.entities || []) {
+        if (entity.type === 'LINE') {
+          const a = transform(entity.x1, entity.y1);
+          const b = transform(entity.x2, entity.y2);
+          addLine(lines, a.x, a.y, b.x, b.y, 'PART');
+        } else if (entity.type === 'LWPOLYLINE') {
+          const points = entity.points.map(point => transform(point.x, point.y));
+          addPolyline(lines, points, entity.closed, 'PART');
+        } else if (entity.type === 'CIRCLE') {
+          const c = transform(entity.cx, entity.cy);
+          addCircle(lines, c.x, c.y, entity.r, 'PART');
+        } else if (entity.type === 'ARC') {
+          const points = arcToPoints(entity, 18).map(point => transform(point.x, point.y));
+          addPolyline(lines, points, false, 'PART');
+        } else if (entity.type === 'ELLIPSE_APPROX') {
+          const points = ellipseToPoints(entity, 36).map(point => transform(point.x, point.y));
+          addPolyline(lines, points, true, 'PART');
+        }
+      }
+    }
+
+    function makePartTransform(placement, sheetOffsetX, sheetH) {
+      const part = placement.item.part;
+      const baseX = sheetOffsetX + placement.x;
+      const baseY = sheetH - placement.y - placement.h;
+      const originalW = part.maxX - part.minX;
+
+      return (x, y) => {
+        const localX = x - part.minX;
+        const localY = y - part.minY;
+        if (placement.rotated) {
+          return {
+            x: baseX + localY,
+            y: baseY + originalW - localX
+          };
+        }
+        return {
+          x: baseX + localX,
+          y: baseY + localY
+        };
+      };
+    }
+
+    function addLine(lines, x1, y1, x2, y2, layer) {
+      lines.push(
+        '0', 'LINE',
+        '8', layer,
+        '10', dxfNumber(x1),
+        '20', dxfNumber(y1),
+        '11', dxfNumber(x2),
+        '21', dxfNumber(y2)
+      );
+    }
+
+    function addCircle(lines, cx, cy, r, layer) {
+      lines.push(
+        '0', 'CIRCLE',
+        '8', layer,
+        '10', dxfNumber(cx),
+        '20', dxfNumber(cy),
+        '40', dxfNumber(r)
+      );
+    }
+
+    function addPolyline(lines, points, closed, layer) {
+      if (!points || points.length < 2) return;
+      lines.push(
+        '0', 'LWPOLYLINE',
+        '8', layer,
+        '90', String(points.length),
+        '70', closed ? '1' : '0'
+      );
+      for (const point of points) {
+        lines.push(
+          '10', dxfNumber(point.x),
+          '20', dxfNumber(point.y)
+        );
+      }
+    }
+
+    function arcToPoints(entity, segments) {
+      const start = degToRad(entity.startAngle);
+      let end = degToRad(entity.endAngle);
+      if (end < start) end += Math.PI * 2;
+      const points = [];
+      for (let i = 0; i <= segments; i++) {
+        const t = start + (end - start) * (i / segments);
+        points.push({
+          x: entity.cx + Math.cos(t) * entity.r,
+          y: entity.cy + Math.sin(t) * entity.r
+        });
+      }
+      return points;
+    }
+
+    function ellipseToPoints(entity, segments) {
+      const points = [];
+      for (let i = 0; i < segments; i++) {
+        const t = Math.PI * 2 * (i / segments);
+        points.push({
+          x: entity.cx + Math.cos(t) * entity.rx,
+          y: entity.cy + Math.sin(t) * entity.ry
+        });
+      }
+      return points;
+    }
+
+    function degToRad(value) {
+      return value * Math.PI / 180;
+    }
+
+    function dxfNumber(value) {
+      return String(round(value));
+    }
+
+    function sanitizeDxfText(value) {
+      return String(value).replace(/\r?\n/g, ' ').replace(/[^\x20-\x7Eก-๙]/g, '');
+    }
+
+    async function downloadText(filename, content, type) {
+      const blob = new Blob([content], { type });
+      setStatus(`กำลังเตรียมไฟล์ ${filename}...`, '');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.rel = 'noopener';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+      showDownloadLink(filename, url);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        a.remove();
+      }, 300000);
+    }
+
+    function setStatus(message, tone) {
+      els.fileStatus.textContent = message;
+      els.fileStatus.className = `status${tone ? ` ${tone}` : ''}`;
+    }
+
+    function showDownloadLink(filename, url) {
+      els.fileStatus.className = 'status ok';
+      els.fileStatus.innerHTML = '';
+      const text = document.createElement('span');
+      text.textContent = `สร้างไฟล์ ${filename} แล้ว `;
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.textContent = 'กดที่นี่เพื่อดาวน์โหลด';
+      link.style.fontWeight = '700';
+      link.style.color = 'var(--accent-2)';
+      els.fileStatus.appendChild(text);
+      els.fileStatus.appendChild(link);
+    }
+
+    async function saveJobLocal() {
+      if (!state.parts.length) return;
+      try {
+        const now = new Date();
+        const jobs = await getLocalJobs();
+        const defaultName = state.projectName || makeReadableJobName(now);
+        const jobName = promptJobName('บันทึกใน Browser Storage', jobs, defaultName);
+        if (!jobName) return;
+        const duplicate = findDuplicateJobName(jobs, jobName, state.projectId);
+        if (duplicate) {
+          setStatus(`ชื่อซ้ำกับงานเดิม: ${duplicate.jobName} กรุณาใช้ชื่ออื่น`, 'warn');
+          return;
+        }
+        state.projectName = jobName;
+        const job = buildJobSnapshot(now, jobName);
+        job.id = state.projectId;
+        job.storage = 'indexeddb';
+        job.updatedAt = now.toISOString();
+        await putLocalJob(job);
+        renderProductionContext();
+        const updated = jobs.some(saved => getJobProjectId(saved) === state.projectId);
+        setStatus(`${updated ? 'อัปเดต' : 'บันทึก'}งานใน Browser Storage แล้ว: ${jobName}`, 'ok');
+      } catch (err) {
+        setStatus(`Save Local failed: ${err.message}`, 'error');
+      }
+    }
+
+    async function loadJobLocal() {
+      try {
+        const jobs = await getLocalJobs();
+        if (!jobs.length) {
+          setStatus('ยังไม่มีงานที่บันทึกไว้ใน Browser Storage', 'warn');
+          return;
+        }
+        const index = chooseLocalJob(jobs, 'เลือกงานที่ต้องการโหลด');
+        if (index < 0) return;
+        loadJobSnapshot(jobs[index]);
+        setStatus(`โหลดงานจาก Browser Storage แล้ว: ${jobs[index].jobName}`, 'ok');
+      } catch (err) {
+        setStatus(`Load Local failed: ${err.message}`, 'error');
+      }
+    }
+
+    async function deleteJobLocal() {
+      try {
+        const jobs = await getLocalJobs();
+        if (!jobs.length) {
+          setStatus('ยังไม่มีงานให้ลบใน Browser Storage', 'warn');
+          return;
+        }
+        const index = chooseLocalJob(jobs, 'เลือกงานที่ต้องการลบ');
+        if (index < 0) return;
+        const job = jobs[index];
+        if (!confirm(`ลบงาน "${job.jobName}" ออกจาก Browser Storage?`)) return;
+        job.deletedAt = new Date().toISOString();
+        job.updatedAt = job.deletedAt;
+        await putLocalJob(job);
+        if (getJobProjectId(job) === state.projectId) resetProjectIdentity();
+        setStatus(`ลบงานแล้ว: ${job.jobName}`, 'ok');
+      } catch (err) {
+        setStatus(`Delete Local failed: ${err.message}`, 'error');
+      }
+    }
+
+    function chooseLocalJob(jobs, title) {
+      const list = jobs.slice(0, 20).map((job, index) => {
+        const date = job.createdAt ? new Date(job.createdAt).toLocaleString('en-GB') : '';
+        const result = job.result ? `${job.result.partCount || 0} parts, ${job.result.sheetCount || 0} sheets` : '';
+        return `${index + 1}. ${job.jobName || 'Untitled'} | ${date} | ${result}`;
+      }).join('\n');
+      const input = prompt(`${title}:\n${list}`, '1');
+      if (!input) return -1;
+      const index = Number.parseInt(input, 10) - 1;
+      return Number.isFinite(index) && index >= 0 && index < jobs.length ? index : -1;
+    }
+
+    function promptJobName(title, jobs, defaultName) {
+      const history = jobs.slice(0, 12).map((job, index) => {
+        const current = getJobProjectId(job) === state.projectId ? ' [โปรเจกต์ปัจจุบัน]' : '';
+        const dateValue = job.updatedAt || job.createdAt;
+        const date = dateValue ? new Date(dateValue).toLocaleString('th-TH') : '';
+        return `${index + 1}. ${job.jobName || 'Untitled'} | ${date}${current}`;
+      }).join('\n');
+      const historyText = history || 'ยังไม่มีประวัติการบันทึก';
+      const mode = jobs.some(job => getJobProjectId(job) === state.projectId)
+        ? 'บันทึกครั้งนี้จะอัปเดตโปรเจกต์เดิม'
+        : 'บันทึกครั้งนี้จะสร้างโปรเจกต์ใหม่';
+      const value = prompt(`${title}\n\nประวัติงานล่าสุด:\n${historyText}\n\n${mode}\nตั้งชื่องาน:`, defaultName);
+      return value ? value.trim().replace(/\s+/g, ' ') : '';
+    }
+
+    function findDuplicateJobName(jobs, jobName, currentProjectId) {
+      const normalized = normalizeJobName(jobName);
+      return jobs.find(job => getJobProjectId(job) !== currentProjectId && normalizeJobName(job.jobName) === normalized);
+    }
+
+    function normalizeJobName(value) {
+      return String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
+    }
+
+    function getJobProjectId(job) {
+      return String(job?.projectId || job?.id || '');
+    }
+
+    async function openProjectManager(storage) {
+      els.projectDialog.showModal();
+      els.projectSearch.value = '';
+      await loadProjectManager(storage);
+    }
+
+    async function loadProjectManager(storage) {
+      state.managerStorage = storage;
+      document.querySelectorAll('[data-storage]').forEach(button => button.classList.toggle('active', button.dataset.storage === storage));
+      els.projectManagerStatus.textContent = 'กำลังโหลดรายการงาน...';
+      try {
+        state.managerJobs = storage === 'online'
+          ? ((await onlineRequest('list', { includeDeleted: true })).jobs || [])
+          : await getLocalJobs(true);
+        els.projectManagerStatus.textContent = `${state.managerJobs.length} โปรเจกต์`;
+        renderProjectManagerRows();
+      } catch (err) {
+        state.managerJobs = [];
+        els.projectManagerStatus.textContent = `โหลดรายการไม่สำเร็จ: ${err.message}`;
+        renderProjectManagerRows();
+      }
+    }
+
+    function renderProjectManagerRows() {
+      const query = normalizeJobName(els.projectSearch.value);
+      const jobs = state.managerJobs.filter(job => !query || [job.jobName, job.material, job.production?.customer, job.production?.orderCode, job.customer, job.orderCode]
+        .some(value => normalizeJobName(value).includes(query)));
+      if (!jobs.length) {
+        els.projectManagerRows.innerHTML = '<tr><td colspan="5">ไม่พบโปรเจกต์</td></tr>';
+        return;
+      }
+      els.projectManagerRows.innerHTML = jobs.map(job => {
+        const deleted = Boolean(job.deletedAt || job.status === 'DELETED');
+        const updated = job.updatedAt || job.createdAt;
+        return `<tr>
+          <td><strong>${escapeHtml(job.jobName || 'Untitled')}</strong><br><span class="status">${escapeHtml(job.orderCode || job.production?.orderCode || getJobProjectId(job).slice(0, 8))}</span></td>
+          <td>${escapeHtml(job.material || job.production?.material || '-')} ${job.thicknessMm || job.production?.thickness ? `${format(job.thicknessMm || job.production?.thickness)} mm` : ''}</td>
+          <td>${updated ? escapeHtml(new Date(updated).toLocaleString('th-TH')) : '-'}</td>
+          <td>${deleted ? 'Deleted' : (getJobProjectId(job) === state.projectId ? 'Current' : 'Active')}</td>
+          <td><div class="project-actions">
+            ${deleted ? `<button class="secondary" data-action="restore" data-id="${escapeHtml(getJobProjectId(job))}">Restore</button>` : `<button class="secondary" data-action="load" data-id="${escapeHtml(getJobProjectId(job))}">Load</button>${state.managerStorage === 'online' ? `<button class="secondary" data-action="history" data-id="${escapeHtml(getJobProjectId(job))}">History</button>` : ''}<button class="secondary" data-action="delete" data-id="${escapeHtml(getJobProjectId(job))}">Delete</button>`}
+          </div></td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function handleProjectManagerAction(event) {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      const job = state.managerJobs.find(item => getJobProjectId(item) === button.dataset.id);
+      if (!job) return;
+      button.disabled = true;
+      try {
+        if (button.dataset.action === 'load') {
+          const loaded = state.managerStorage === 'online' ? (await onlineRequest('load', { id: getJobProjectId(job) })).job : job;
+          loadJobSnapshot(loaded); els.projectDialog.close(); setStatus(`โหลดโปรเจกต์แล้ว: ${loaded.jobName}`, 'ok'); return;
+        }
+        if (button.dataset.action === 'history') {
+          const versions = (await onlineRequest('versions', { id: getJobProjectId(job) })).versions || [];
+          if (!versions.length) { els.projectManagerStatus.textContent = 'ยังไม่มีเวอร์ชันก่อนหน้า'; return; }
+          const list = versions.slice(0, 30).map((version, index) => `${index + 1}. Revision ${version.revision} | ${new Date(version.savedAt).toLocaleString('th-TH')} | ${version.updatedBy || '-'}`).join('\n');
+          const choice = Number.parseInt(prompt(`เลือกเวอร์ชันของ ${job.jobName}:\n${list}`, '1') || '', 10) - 1;
+          if (choice >= 0 && choice < versions.length) {
+            const loaded = (await onlineRequest('loadVersion', { id: getJobProjectId(job), fileId: versions[choice].fileId })).job;
+            loadJobSnapshot(loaded); els.projectDialog.close(); setStatus(`โหลด Revision ${versions[choice].revision} แล้ว กด Save เพื่อสร้างเวอร์ชันใหม่`, 'ok');
+          }
+          return;
+        }
+        if (button.dataset.action === 'delete' && confirm(`ย้าย "${job.jobName}" ไปถังขยะ?`)) {
+          if (state.managerStorage === 'online') await onlineRequest('delete', { id: getJobProjectId(job) });
+          else { job.deletedAt = new Date().toISOString(); job.updatedAt = job.deletedAt; await putLocalJob(job); }
+        }
+        if (button.dataset.action === 'restore') {
+          if (state.managerStorage === 'online') await onlineRequest('restore', { id: getJobProjectId(job) });
+          else { delete job.deletedAt; job.updatedAt = new Date().toISOString(); await putLocalJob(job); }
+        }
+        await loadProjectManager(state.managerStorage);
+      } catch (err) {
+        els.projectManagerStatus.textContent = err.message;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function loadOnlineConfig() {
+      try {
+        const config = JSON.parse(localStorage.getItem(ONLINE_CONFIG_KEY) || '{}');
+        els.onlineApiUrl.value = config.url || ONLINE_DEFAULT_URL;
+        els.onlineApiSecret.value = config.secret || ONLINE_DEFAULT_SECRET;
+        els.rememberOnlineSecret.checked = true;
+      } catch (_) {
+        localStorage.removeItem(ONLINE_CONFIG_KEY);
+        els.onlineApiUrl.value = ONLINE_DEFAULT_URL;
+        els.onlineApiSecret.value = ONLINE_DEFAULT_SECRET;
+        els.rememberOnlineSecret.checked = true;
+      }
+    }
+
+    function saveOnlineConfig() {
+      localStorage.setItem(ONLINE_CONFIG_KEY, JSON.stringify({
+        url: els.onlineApiUrl.value.trim(),
+        secret: els.rememberOnlineSecret.checked ? els.onlineApiSecret.value : ''
+      }));
+    }
+
+    function getOnlineConfig() {
+      saveOnlineConfig();
+      const url = els.onlineApiUrl.value.trim();
+      const secret = els.onlineApiSecret.value;
+      if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:\?.*)?$/.test(url)) {
+        throw new Error('กรุณาใส่ Apps Script Web App URL ที่ลงท้ายด้วย /exec');
+      }
+      if (!secret) throw new Error('กรุณาใส่รหัสเชื่อมต่อ');
+      return { url, secret };
+    }
+
+    async function onlineRequest(action, payload = {}) {
+      const config = getOnlineConfig();
+      const response = await fetch(config.url, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, secret: config.secret, ...payload })
+      });
+      const text = await response.text();
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (_) {
+        throw new Error('Apps Script ตอบกลับไม่ถูกต้อง กรุณาตรวจสอบ deployment และสิทธิ์ Who has access');
+      }
+      if (!result.ok) throw new Error(result.error || 'Online request failed');
+      return result;
+    }
+
+    async function compressJobForOnline(job) {
+      const json = JSON.stringify(job);
+      if (!('CompressionStream' in window)) return { encoding: 'json', data: json };
+      const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
+      const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += 32768) binary += String.fromCharCode(...bytes.subarray(i, i + 32768));
+      return { encoding: 'gzip-base64', data: btoa(binary), originalBytes: json.length, compressedBytes: bytes.length };
+    }
+
+    async function saveJobOnline() {
+      if (!state.parts.length) return;
+      try {
+        const now = new Date();
+        setStatus('กำลังอ่านประวัติงานก่อนบันทึก...', '');
+        const historyResult = await onlineRequest('list');
+        const jobs = historyResult.jobs || [];
+        const jobName = promptJobName('บันทึกออนไลน์', jobs, state.projectName || makeReadableJobName(now));
+        if (!jobName) return;
+        const duplicate = findDuplicateJobName(jobs, jobName, state.projectId);
+        if (duplicate) {
+          setStatus(`ชื่อซ้ำกับงานออนไลน์เดิม: ${duplicate.jobName} กรุณาใช้ชื่ออื่น`, 'warn');
+          return;
+        }
+        state.projectName = jobName;
+        setStatus('กำลังบันทึกงานลง Google Sheet...', '');
+        const job = buildJobSnapshot(now, jobName);
+        const jobPackage = await compressJobForOnline(job);
+        const result = await onlineRequest('save', { jobPackage });
+        state.projectId = result.projectId || result.id || state.projectId;
+        renderProductionContext();
+        state.projectRevision = Number(result.revision || state.projectRevision || 1);
+        setStatus(`${result.updated ? 'อัปเดต' : 'บันทึก'}ออนไลน์แล้ว: ${jobName} (rev ${state.projectRevision})`, 'ok');
+      } catch (err) {
+        setStatus(`Save Online failed: ${err.message}`, 'error');
+      }
+    }
+
+    async function loadJobOnline() {
+      try {
+        setStatus('กำลังอ่านรายการงานจาก Google Sheet...', '');
+        const result = await onlineRequest('list');
+        const jobs = result.jobs || [];
+        if (!jobs.length) {
+          setStatus('ยังไม่มีงานออนไลน์ใน Google Sheet', 'warn');
+          return;
+        }
+        const index = chooseOnlineJob(jobs, 'เลือกงานออนไลน์ที่ต้องการโหลด');
+        if (index < 0) return;
+        setStatus(`กำลังโหลด ${jobs[index].jobName}...`, '');
+        const loaded = await onlineRequest('load', { id: jobs[index].id });
+        loadJobSnapshot(loaded.job);
+        setStatus(`โหลดงานออนไลน์แล้ว: ${loaded.job.jobName || jobs[index].jobName}`, 'ok');
+      } catch (err) {
+        setStatus(`Load Online failed: ${err.message}`, 'error');
+      }
+    }
+
+    async function deleteJobOnline() {
+      try {
+        setStatus('กำลังอ่านรายการงานจาก Google Sheet...', '');
+        const result = await onlineRequest('list');
+        const jobs = result.jobs || [];
+        if (!jobs.length) {
+          setStatus('ยังไม่มีงานออนไลน์ให้ลบ', 'warn');
+          return;
+        }
+        const index = chooseOnlineJob(jobs, 'เลือกงานออนไลน์ที่ต้องการลบ');
+        if (index < 0 || !confirm(`ลบงานออนไลน์ "${jobs[index].jobName}"?`)) return;
+        await onlineRequest('delete', { id: jobs[index].id });
+        if (getJobProjectId(jobs[index]) === state.projectId) resetProjectIdentity();
+        setStatus(`ลบงานออนไลน์แล้ว: ${jobs[index].jobName}`, 'ok');
+      } catch (err) {
+        setStatus(`Delete Online failed: ${err.message}`, 'error');
+      }
+    }
+
+    function chooseOnlineJob(jobs, title) {
+      let visibleJobs = jobs;
+      if (jobs.length > 30) {
+        const keyword = prompt(`มีงานทั้งหมด ${jobs.length} รายการ\nพิมพ์ชื่อ วัสดุ หรือวันที่เพื่อค้นหา\nเว้นว่างเพื่อแสดง 30 งานล่าสุด`, '');
+        if (keyword === null) return -1;
+        const query = keyword.trim().toLocaleLowerCase();
+        visibleJobs = query
+          ? jobs.filter(job => [job.jobName, job.createdAt, job.material]
+            .some(value => String(value || '').toLocaleLowerCase().includes(query)))
+          : jobs.slice(0, 30);
+      }
+      if (!visibleJobs.length) {
+        setStatus('ไม่พบงานออนไลน์ที่ตรงกับคำค้น', 'warn');
+        return -1;
+      }
+      const choices = visibleJobs.slice(0, 50);
+      const list = choices.map((job, index) => {
+        const date = job.createdAt ? new Date(job.createdAt).toLocaleString('th-TH') : '';
+        const material = job.material ? ` | ${job.material}` : '';
+        return `${index + 1}. ${job.jobName || 'Untitled'} | ${date}${material} | ${job.partCount || 0} ชิ้น | ${job.sheetCount || 0} แผ่น`;
+      }).join('\n');
+      const more = visibleJobs.length > choices.length ? `\nแสดง 50 จาก ${visibleJobs.length} รายการ กรุณาค้นหาให้เจาะจงขึ้น` : '';
+      const input = prompt(`${title}:\n${list}${more}`, '1');
+      if (!input) return -1;
+      const index = Number.parseInt(input, 10) - 1;
+      if (!Number.isFinite(index) || index < 0 || index >= choices.length) return -1;
+      return jobs.findIndex(job => job.id === choices[index].id);
+    }
+
+    function openLocalDb() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(LOCAL_DB_NAME, LOCAL_DB_VERSION);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(LOCAL_STORE)) {
+            const store = db.createObjectStore(LOCAL_STORE, { keyPath: 'id' });
+            store.createIndex('createdAt', 'createdAt');
+            store.createIndex('jobName', 'jobName');
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function putLocalJob(job) {
+      const db = await openLocalDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(LOCAL_STORE, 'readwrite');
+        tx.objectStore(LOCAL_STORE).put(job);
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          db.close();
+          reject(tx.error);
+        };
+      });
+    }
+
+    async function getLocalJobs(includeDeleted = false) {
+      const db = await openLocalDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(LOCAL_STORE, 'readonly');
+        const request = tx.objectStore(LOCAL_STORE).getAll();
+        request.onsuccess = () => {
+          db.close();
+          const jobs = (request.result || []).filter(job => includeDeleted || !job.deletedAt).sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
+          resolve(jobs);
+        };
+        request.onerror = () => {
+          db.close();
+          reject(request.error);
+        };
+      });
+    }
+
+    async function deleteLocalJob(id) {
+      const db = await openLocalDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(LOCAL_STORE, 'readwrite');
+        tx.objectStore(LOCAL_STORE).delete(id);
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          db.close();
+          reject(tx.error);
+        };
+      });
+    }
+
+    function buildJobSnapshot(now, jobName) {
+      return {
+        app: 'Nice nesting',
+        version: 2,
+        id: state.projectId,
+        projectId: state.projectId,
+        baseRevision: state.projectRevision,
+        jobName,
+        createdAt: state.projectCreatedAt || now.toISOString(),
+        updatedAt: now.toISOString(),
+        sheet: {
+          width: positive(els.sheetW.value),
+          height: positive(els.sheetH.value)
+        },
+        production: {
+          orderCode: els.orderCode.value.trim(),
+          customer: els.customer.value.trim(),
+          material: els.material.value.trim(),
+          thickness: Math.max(0, Number(els.thickness.value) || 0),
+          thicknessUnit: 'mm',
+          dueDate: els.dueDate.value,
+          operatorName: els.operatorName.value.trim(),
+          notes: els.productionNotes.value.trim()
+        },
+        settings: {
+          gap: Math.max(0, Number(els.gap.value) || 0),
+          margin: Math.max(0, Number(els.margin.value) || 0),
+          kerf: Math.max(0, Number(els.kerf.value) || 0),
+          grainDirection: els.grainDirection.value,
+          allowRotate: els.allowRotate.checked,
+          sortMode: els.sortMode.value,
+          randomPasses: Math.max(0, Math.floor(Number(els.randomPasses.value) || 0))
+        },
+        parts: state.parts.map(part => ({
+          id: part.id,
+          name: part.name,
+          quantity: part.quantity,
+          width: part.width,
+          height: part.height,
+          minX: part.minX,
+          minY: part.minY,
+          maxX: part.maxX,
+          maxY: part.maxY,
+          entityCount: part.entityCount,
+          sourceText: part.sourceText || ''
+          ,allowRotate: part.allowRotate !== false
+        })),
+        result: {
+          sheetCount: state.sheets.length,
+          partCount: state.parts.reduce((sum, part) => sum + Number(part.quantity || 0), 0),
+          usedPercent: els.usedPercent.textContent
+        }
+      };
+    }
+
+    function loadJobSnapshot(job) {
+      state.projectId = getJobProjectId(job) || makeProjectId();
+      state.projectName = String(job.jobName || '').trim();
+      state.projectCreatedAt = job.createdAt || new Date().toISOString();
+      state.projectRevision = Number(job.revision || job.baseRevision || 0);
+      els.orderCode.value = job.production?.orderCode || '';
+      els.customer.value = job.production?.customer || '';
+      els.material.value = job.production?.material || 'Aluminium Composite';
+      els.thickness.value = job.production?.thickness ?? 4;
+      els.dueDate.value = job.production?.dueDate || '';
+      els.operatorName.value = job.production?.operatorName || '';
+      els.productionNotes.value = job.production?.notes || '';
+      els.sheetW.value = job.sheet?.width || 1220;
+      els.sheetH.value = job.sheet?.height || 2440;
+      els.gap.value = job.settings?.gap ?? 5;
+      els.margin.value = job.settings?.margin ?? 10;
+      els.kerf.value = job.settings?.kerf ?? 0;
+      els.grainDirection.value = job.settings?.grainDirection || 'none';
+      els.allowRotate.checked = job.settings?.allowRotate !== false;
+      els.sortMode.value = job.settings?.sortMode || 'area';
+      els.randomPasses.value = job.settings?.randomPasses ?? 120;
+
+      state.parts = (job.parts || []).map((saved, index) => {
+        const parsed = saved.sourceText ? parseDxf(saved.sourceText) : {
+          width: saved.width || 0,
+          height: saved.height || 0,
+          minX: saved.minX || 0,
+          minY: saved.minY || 0,
+          maxX: saved.maxX || saved.width || 0,
+          maxY: saved.maxY || saved.height || 0,
+          entityCount: saved.entityCount || 0,
+          entities: [],
+          outline: []
+        };
+        return {
+          id: saved.id || `${Date.now()}-${index}`,
+          name: saved.name || `part-${index + 1}.dxf`,
+          width: parsed.width,
+          height: parsed.height,
+          minX: parsed.minX,
+          minY: parsed.minY,
+          maxX: parsed.maxX,
+          maxY: parsed.maxY,
+          entityCount: parsed.entityCount,
+          entities: parsed.entities,
+          outline: parsed.outline,
+          sourceText: saved.sourceText || '',
+          quantity: saved.quantity || 1,
+          allowRotate: saved.allowRotate !== false,
+          error: parsed.entityCount ? '' : 'โหลด geometry ไม่ครบ'
+        };
+      });
+      state.sheets = [];
+      state.validationErrors = [];
+      state.failed = [];
+      state.activeSheet = 0;
+      renderPartsControls();
+      render();
+      if (state.parts.length) runNesting();
+    }
+
+    function buildCsvText() {
+      const rows = [['sheet', 'file', 'x', 'y', 'width', 'height', 'rotated']];
+      state.sheets.forEach(sheet => {
+        sheet.placements.forEach(p => {
+          rows.push([sheet.id, p.item.part.name, round(p.x), round(p.y), round(p.w), round(p.h), p.rotated ? 'yes' : 'no']);
+        });
+      });
+      return rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n');
+    }
+
+    function toDateFolder(date) {
+      return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+    }
+
+    function makeJobName(date) {
+      return `${toDateFolder(date)}_${pad2(date.getHours())}${pad2(date.getMinutes())}${pad2(date.getSeconds())}`;
+    }
+
+    function makeReadableJobName(date) {
+      return `Job ${toDateFolder(date)} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+    }
+
+    function makeProjectId() {
+      return crypto.randomUUID ? crypto.randomUUID() : `project-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function resetProjectIdentity() {
+      state.projectId = makeProjectId();
+      state.projectName = '';
+      state.projectCreatedAt = new Date().toISOString();
+      state.projectRevision = 0;
+      renderProductionContext();
+    }
+
+    function pad2(value) {
+      return String(value).padStart(2, '0');
+    }
+
+    function clearAll() {
+      state.parts = [];
+      state.sheets = [];
+      state.validationErrors = [];
+      state.failed = [];
+      state.activeSheet = 0;
+      resetProjectIdentity();
+      els.fileInput.value = '';
+      els.fileStatus.textContent = 'เลือกไฟล์ DXF ได้หลายไฟล์พร้อมกัน';
+      els.fileStatus.className = 'status';
+      renderPartsControls();
+      render();
+    }
+
+    function format(value) {
+      return Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    loadOnlineConfig();
+    render();
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  </script>
+</body>
+</html>
