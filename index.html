@@ -74,6 +74,13 @@
       flex-wrap: wrap;
     }
 
+    .header-divider {
+      width: 1px;
+      height: 22px;
+      background: var(--line);
+      margin: 0 4px;
+    }
+
     main {
       display: grid;
       grid-template-columns: 360px minmax(0, 1fr);
@@ -195,6 +202,14 @@
     }
 
     .full { grid-column: 1 / -1; }
+
+    .save-group-label {
+      font-size: 11px;
+      font-weight: 650;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
 
     .action-row {
       display: grid;
@@ -479,11 +494,13 @@
   <header>
     <h1>Nice nesting</h1>
     <div class="header-actions">
+      <button class="secondary" id="manageProjectsBtn" type="button">Projects</button>
       <button class="secondary" id="clearBtn" type="button">Clear</button>
+      <span class="header-divider"></span>
       <button class="secondary" id="csvBtn" type="button" disabled>Export CSV</button>
       <button class="secondary" id="dxfBtn" type="button" disabled>Export DXF</button>
       <button class="secondary" id="pdfBtn" type="button" disabled>Export PDF</button>
-      <button class="secondary" id="manageProjectsBtn" type="button">Projects</button>
+      <span class="header-divider"></span>
       <button class="secondary" id="cancelNestingBtn" type="button" hidden>Cancel</button>
       <button id="runBtn" type="button" disabled>คำนวณ Nesting</button>
     </div>
@@ -493,41 +510,18 @@
     <aside>
       <div class="panel controls">
         <div class="section">
-          <div class="section-title">ไฟล์ DXF</div>
+          <div class="section-title">1. ไฟล์ DXF</div>
           <input id="fileInput" type="file" accept=".dxf,.DXF" multiple>
           <div class="status" id="fileStatus">เลือกไฟล์ DXF ได้หลายไฟล์พร้อมกัน</div>
         </div>
 
         <div class="section">
-          <div class="section-title">ข้อมูลสั่งผลิต</div>
-          <div class="field-grid">
-            <label>รหัสงาน
-              <input id="orderCode" type="text" placeholder="เช่น PJ-2026-001">
-            </label>
-            <label>วัสดุ
-              <input id="material" type="text" list="materialOptions" value="Aluminium Composite" placeholder="เช่น ACP, Aluminium">
-              <datalist id="materialOptions">
-                <option value="Aluminium Composite"></option>
-                <option value="Aluminium"></option>
-                <option value="Stainless Steel"></option>
-                <option value="Mild Steel"></option>
-                <option value="Acrylic"></option>
-              </datalist>
-            </label>
-            <label>ความหนา (มม.)
-              <input id="thickness" type="number" min="0" step="0.1" value="4">
-            </label>
-          </div>
-          <input id="customer" type="hidden">
-          <input id="dueDate" type="hidden">
-          <input id="operatorName" type="hidden">
-          <label>หมายเหตุ
-            <textarea id="productionNotes" placeholder="รายละเอียดสำหรับฝ่ายผลิต"></textarea>
-          </label>
+          <div class="section-title">2. รายการชิ้นงาน</div>
+          <div id="partsHolder" class="status">ยังไม่มีไฟล์</div>
         </div>
 
         <div class="section">
-          <div class="section-title">ขนาดแผ่น</div>
+          <div class="section-title">3. ขนาดแผ่น</div>
           <div class="field-grid">
             <label>กว้าง
               <input id="sheetW" type="number" min="1" step="1" value="1220">
@@ -558,7 +552,7 @@
         </div>
 
         <div class="section">
-          <div class="section-title">วิธีจัดวาง</div>
+          <div class="section-title">4. วิธีจัดวาง</div>
           <select id="sortMode">
             <option value="area">ชิ้นใหญ่ก่อน</option>
             <option value="height">ชิ้นสูงก่อน</option>
@@ -576,32 +570,35 @@
         </div>
 
         <div class="section">
-          <div class="section-title">บันทึกในเครื่อง</div>
-          <div class="action-row">
-            <button class="secondary" id="saveLocalBtn" type="button" disabled>Save</button>
-            <button class="secondary" id="loadLocalBtn" type="button">Load</button>
-            <button class="secondary" id="deleteLocalBtn" type="button">Delete</button>
+          <div class="section-title">5. ข้อมูลสั่งผลิต</div>
+          <div class="field-grid">
+            <label>รหัสงาน
+              <input id="orderCode" type="text" placeholder="เช่น PJ-2026-001">
+            </label>
+            <label>วัสดุ
+              <input id="material" type="text" list="materialOptions" value="Aluminium Composite" placeholder="เช่น ACP, Aluminium">
+              <datalist id="materialOptions">
+                <option value="Aluminium Composite"></option>
+                <option value="Aluminium"></option>
+                <option value="Stainless Steel"></option>
+                <option value="Mild Steel"></option>
+                <option value="Acrylic"></option>
+              </datalist>
+            </label>
+            <label>ความหนา (มม.)
+              <input id="thickness" type="number" min="0" step="0.1" value="4">
+            </label>
           </div>
+          <input id="customer" type="hidden">
+          <input id="dueDate" type="hidden">
+          <input id="operatorName" type="hidden">
+          <label>หมายเหตุ
+            <textarea id="productionNotes" placeholder="รายละเอียดสำหรับฝ่ายผลิต"></textarea>
+          </label>
         </div>
 
         <div class="section">
-          <div class="section-title">Google Sheet Online</div>
-          <input id="onlineApiUrl" type="hidden">
-          <input id="onlineApiSecret" type="hidden">
-          <input id="rememberOnlineSecret" type="checkbox" hidden checked>
-          <div class="action-row">
-            <a class="link-button" href="https://docs.google.com/spreadsheets/d/1ZNaty8y2oog98U7KoeURukuMFGgHmlK9IpGk8qEQwc4/edit" target="_blank" rel="noopener">Open Sheet</a>
-            <a class="link-button" href="https://drive.google.com/drive/folders/1feVVavKqvCS_lRx-UJk5ofoGGrgIeoCE" target="_blank" rel="noopener">Open Drive</a>
-          </div>
-          <div class="action-row">
-            <button class="secondary" id="saveOnlineBtn" type="button" disabled>Save</button>
-            <button class="secondary" id="loadOnlineBtn" type="button">Load</button>
-            <button class="secondary" id="deleteOnlineBtn" type="button">Delete</button>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Export</div>
+          <div class="section-title">6. Export</div>
           <label>รูปแบบ DXF
             <select id="dxfExportMode">
               <option value="merged">รวมทุกแผ่นในไฟล์เดียว</option>
@@ -615,8 +612,26 @@
         </div>
 
         <div class="section">
-          <div class="section-title">รายการชิ้นงาน</div>
-          <div id="partsHolder" class="status">ยังไม่มีไฟล์</div>
+          <div class="section-title">7. บันทึกงาน</div>
+          <div class="save-group-label">ในเครื่องนี้ (Local)</div>
+          <div class="action-row">
+            <button class="secondary" id="saveLocalBtn" type="button" disabled>Save</button>
+            <button class="secondary" id="loadLocalBtn" type="button">Load</button>
+            <button class="secondary" id="deleteLocalBtn" type="button">Delete</button>
+          </div>
+          <div class="save-group-label">Google Sheet (Online)</div>
+          <input id="onlineApiUrl" type="hidden">
+          <input id="onlineApiSecret" type="hidden">
+          <input id="rememberOnlineSecret" type="checkbox" hidden checked>
+          <div class="action-row">
+            <button class="secondary" id="saveOnlineBtn" type="button" disabled>Save</button>
+            <button class="secondary" id="loadOnlineBtn" type="button">Load</button>
+            <button class="secondary" id="deleteOnlineBtn" type="button">Delete</button>
+          </div>
+          <div class="action-row">
+            <a class="link-button" href="https://docs.google.com/spreadsheets/d/1ZNaty8y2oog98U7KoeURukuMFGgHmlK9IpGk8qEQwc4/edit" target="_blank" rel="noopener">Open Sheet</a>
+            <a class="link-button" href="https://drive.google.com/drive/folders/1feVVavKqvCS_lRx-UJk5ofoGGrgIeoCE" target="_blank" rel="noopener">Open Drive</a>
+          </div>
         </div>
       </div>
     </aside>
@@ -2016,49 +2031,91 @@
     }
 
     function buildPdfSummary() {
-      const pageW = 842, pageH = 595, margin = 34;
-      const pages = [];
+      // สรุปทุกอย่างในหน้าเดียว: ซ้าย = ข้อมูลงาน + รายการชิ้นงาน, ขวา = layout ทุกแผ่น
+      const pageW = 842, pageH = 595, margin = 30;
       const sheetW = positive(els.sheetW.value), sheetH = positive(els.sheetH.value);
       const totalParts = state.parts.reduce((sum, part) => sum + Math.max(0, Math.floor(Number(part.quantity) || 0)), 0);
-      const metadata = [
-        `รหัสงาน: ${els.orderCode.value.trim() || '-'}    โปรเจกต์: ${state.projectName || 'งานใหม่'}`,
-        `วัสดุ: ${els.material.value.trim() || '-'}    ความหนา: ${format(Number(els.thickness.value) || 0)} mm`,
-        `ขนาดแผ่น: ${format(sheetW)} x ${format(sheetH)} mm    จำนวน ${state.sheets.length} แผ่น    ${totalParts} ชิ้น    ใช้พื้นที่เฉลี่ย ${els.usedPercent.textContent}`,
-        `วันที่ออกเอกสาร: ${new Date().toLocaleString('th-TH')}`
+      const page = createCanvasPdfPage(pageW, pageH), ctx = page.ctx;
+      drawPdfCanvasHeader(ctx, 'ใบสรุปงานตัด / Nesting Summary', `${state.projectName || 'งานใหม่'}  |  ${new Date().toLocaleString('th-TH')}`);
+
+      const leftX = margin, leftW = 296;
+      let y = 82;
+      ctx.fillStyle = '#222'; ctx.font = '11px "Segoe UI", Tahoma, sans-serif';
+      const infoLines = [
+        `รหัสงาน: ${els.orderCode.value.trim() || '-'}`,
+        `วัสดุ: ${els.material.value.trim() || '-'}  หนา ${format(Number(els.thickness.value) || 0)} mm`,
+        `ขนาดแผ่น: ${format(sheetW)} x ${format(sheetH)} mm  จำนวน ${state.sheets.length} แผ่น`,
+        `ชิ้นงานรวม: ${totalParts} ชิ้น  ใช้พื้นที่เฉลี่ย ${els.usedPercent.textContent}`,
+        `Kerf ${format(Number(els.kerf.value) || 0)} mm  ระยะห่างชิ้น ${format(Number(els.gap.value) || 0)} mm  ขอบแผ่น ${format(Number(els.margin.value) || 0)} mm`
       ];
-      let page = createCanvasPdfPage(pageW, pageH), ctx = page.ctx, y = 34;
-      drawPdfCanvasHeader(ctx, 'DXF Nesting Summary', state.projectName || 'Nice nesting');
-      y = 76; ctx.fillStyle = '#222'; ctx.font = '12px "Segoe UI", Tahoma, sans-serif';
-      metadata.forEach(line => { ctx.fillText(line, margin, y); y += 20; });
-      if (els.productionNotes.value.trim()) { ctx.fillStyle = '#555'; y = drawWrappedCanvasText(ctx, `หมายเหตุ: ${els.productionNotes.value.trim()}`, margin, y + 2, pageW - margin * 2, 16); }
-      y += 10; drawCanvasSectionTitle(ctx, 'BOM / สรุปวัสดุ', margin, y); y += 24;
-      ctx.fillStyle = '#222'; ctx.font = '12px "Segoe UI", Tahoma, sans-serif';
-      ctx.fillText(`${els.material.value.trim() || '-'} | ${format(Number(els.thickness.value) || 0)} mm | ${format(sheetW)} x ${format(sheetH)} mm | ${state.sheets.length} แผ่น`, margin, y);
-      y += 30; drawCanvasSectionTitle(ctx, 'รายการชิ้นงาน', margin, y); y += 23;
-      const drawTableHeader = () => { ctx.fillStyle = '#f1f1f2'; ctx.fillRect(margin, y - 15, pageW - margin * 2, 21); ctx.fillStyle = '#222'; ctx.font = 'bold 10px "Segoe UI", Tahoma, sans-serif'; ctx.fillText('ไฟล์', margin + 6, y); ctx.fillText('ขนาด', 460, y); ctx.fillText('จำนวน', 590, y); ctx.fillText('Entities', 660, y); y += 14; };
-      drawTableHeader();
-      for (const part of state.parts) {
-        if (y > pageH - 34) { pages.push(page.canvas.toDataURL('image/jpeg', .92)); page = createCanvasPdfPage(pageW, pageH); ctx = page.ctx; drawPdfCanvasHeader(ctx, 'รายการชิ้นงาน (ต่อ)', state.projectName || ''); y = 82; drawTableHeader(); }
-        ctx.fillStyle = '#222'; ctx.font = '10px "Segoe UI", Tahoma, sans-serif';
-        ctx.fillText(truncateText(part.name, 64), margin + 6, y); ctx.fillText(`${format(part.width)} x ${format(part.height)}`, 460, y); ctx.fillText(String(part.quantity), 590, y); ctx.fillText(String(part.entityCount), 660, y); y += 17;
+      infoLines.forEach(line => { ctx.fillText(line, leftX, y); y += 16; });
+      const notes = els.productionNotes.value.trim();
+      if (notes) {
+        ctx.fillStyle = '#555';
+        y = Math.min(drawWrappedCanvasText(ctx, `หมายเหตุ: ${notes}`, leftX, y + 2, leftW, 14), y + 46);
       }
-      pages.push(page.canvas.toDataURL('image/jpeg', .92));
-      for (const sheet of state.sheets) {
-        page = createCanvasPdfPage(pageW, pageH); ctx = page.ctx;
-        const used = sheet.placements.reduce((sum, p) => sum + p.w * p.h, 0), usedPercent = sheetW && sheetH ? Math.round(used / (sheetW * sheetH) * 100) : 0;
-        drawPdfCanvasHeader(ctx, `แผ่น ${sheet.id}`, `${sheet.placements.length} ชิ้น | ใช้พื้นที่ ${usedPercent}% | ${els.material.value.trim()} ${format(Number(els.thickness.value) || 0)} mm`);
-        const box = { x: margin, y: 82, w: pageW - margin * 2, h: pageH - 125 }, scale = Math.min(box.w / sheetW, box.h / sheetH), drawW = sheetW * scale, drawH = sheetH * scale, ox = box.x + (box.w - drawW) / 2, oy = box.y + (box.h - drawH) / 2;
-        ctx.fillStyle = '#fff'; ctx.fillRect(ox, oy, drawW, drawH); ctx.strokeStyle = '#111'; ctx.lineWidth = 1.2; ctx.strokeRect(ox, oy, drawW, drawH);
+
+      y += 12; drawCanvasSectionTitle(ctx, 'รายการชิ้นงาน', leftX, y); y += 18;
+      const colSize = leftX + 178, colQty = leftX + 264;
+      ctx.fillStyle = '#f1f1f2'; ctx.fillRect(leftX, y - 11, leftW, 16);
+      ctx.fillStyle = '#222'; ctx.font = 'bold 9px "Segoe UI", Tahoma, sans-serif';
+      ctx.fillText('ไฟล์', leftX + 4, y); ctx.fillText('ขนาด (mm)', colSize, y); ctx.fillText('จำนวน', colQty, y);
+      y += 13;
+      const rowH = 12.5, bottomLimit = pageH - 26;
+      const maxRows = Math.max(1, Math.floor((bottomLimit - y) / rowH));
+      const shown = state.parts.length > maxRows ? maxRows - 1 : state.parts.length;
+      ctx.font = '9px "Segoe UI", Tahoma, sans-serif';
+      for (let i = 0; i < shown; i++) {
+        const part = state.parts[i];
+        ctx.fillStyle = '#222';
+        ctx.fillText(truncateText(part.name, 38), leftX + 4, y);
+        ctx.fillText(`${format(part.width)} x ${format(part.height)}`, colSize, y);
+        ctx.fillText(String(part.quantity), colQty, y);
+        y += rowH;
+      }
+      if (shown < state.parts.length) {
+        ctx.fillStyle = '#777';
+        ctx.fillText(`+ อีก ${state.parts.length - shown} รายการ (ดูรายละเอียดใน Export CSV)`, leftX + 4, y);
+      }
+
+      // พื้นที่ layout ฝั่งขวา วาดทุกแผ่นเป็น grid ให้จบในหน้าเดียว
+      const areaX = leftX + leftW + 18, areaY = 74;
+      const areaW = pageW - margin - areaX, areaH = pageH - 24 - areaY;
+      const sheetTotal = Math.max(1, state.sheets.length);
+      const cols = sheetTotal <= 1 ? 1 : sheetTotal <= 4 ? 2 : 3;
+      const rows = Math.ceil(sheetTotal / cols);
+      const captionH = 14;
+      const cellW = (areaW - (cols - 1) * 10) / cols;
+      const cellH = (areaH - rows * captionH - (rows - 1) * 8) / rows;
+      state.sheets.forEach((sheet, sheetIndex) => {
+        const col = sheetIndex % cols, row = Math.floor(sheetIndex / cols);
+        const cellX = areaX + col * (cellW + 10);
+        const cellY = areaY + row * (cellH + captionH + 8);
+        const scale = Math.min(cellW / sheetW, cellH / sheetH);
+        const drawW = sheetW * scale, drawH = sheetH * scale;
+        const ox = cellX + (cellW - drawW) / 2, oy = cellY + (cellH - drawH) / 2;
+        ctx.fillStyle = '#fff'; ctx.fillRect(ox, oy, drawW, drawH);
+        ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.strokeRect(ox, oy, drawW, drawH);
         sheet.placements.forEach((p, index) => {
-          const polygon = getPlacementPolygon(p).map(point => ({ x: ox + point.x * scale, y: oy + point.y * scale })), x = ox + p.x * scale, py = oy + p.y * scale, w = p.w * scale, h = p.h * scale;
-          ctx.beginPath(); polygon.forEach((point, i) => i ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y)); ctx.closePath(); ctx.fillStyle = p.color; ctx.globalAlpha = .86; ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = '#222'; ctx.lineWidth = .7; ctx.stroke();
-          const label = `${index + 1}. ${truncateText(p.item.part.name, 38)}${p.rotated ? ' R' : ''}`; ctx.fillStyle = '#fff'; ctx.font = 'bold 7px "Segoe UI", Tahoma, sans-serif';
-          if (h > w * 1.35 && w > 10) { ctx.save(); ctx.translate(x + Math.min(w - 3, 9), py + 4); ctx.rotate(Math.PI / 2); ctx.fillText(label, 0, 0); ctx.restore(); } else if (w > 28 && h > 10) ctx.fillText(label, x + 3, py + 10);
+          const polygon = getPlacementPolygon(p).map(point => ({ x: ox + point.x * scale, y: oy + point.y * scale }));
+          const x = ox + p.x * scale, py = oy + p.y * scale, w = p.w * scale, h = p.h * scale;
+          ctx.beginPath(); polygon.forEach((point, i) => i ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y)); ctx.closePath();
+          ctx.fillStyle = p.color; ctx.globalAlpha = .86; ctx.fill(); ctx.globalAlpha = 1;
+          ctx.strokeStyle = '#222'; ctx.lineWidth = .6; ctx.stroke();
+          const label = sheetTotal === 1
+            ? `${index + 1}. ${truncateText(p.item.part.name, 30)}${p.rotated ? ' R' : ''}`
+            : String(index + 1);
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 7px "Segoe UI", Tahoma, sans-serif';
+          if (h > w * 1.35 && w > 10) { ctx.save(); ctx.translate(x + Math.min(w - 3, 9), py + 4); ctx.rotate(Math.PI / 2); ctx.fillText(label, 0, 0); ctx.restore(); }
+          else if (w > 16 && h > 9) ctx.fillText(label, x + 3, py + 9);
         });
-        ctx.fillStyle = '#444'; ctx.font = '10px "Segoe UI", Tahoma, sans-serif'; ctx.fillText(`${format(sheetW)} x ${format(sheetH)} mm | Kerf ${format(Number(els.kerf.value) || 0)} mm | Gap ${format(Number(els.gap.value) || 0)} mm`, margin, pageH - 24);
-        pages.push(page.canvas.toDataURL('image/jpeg', .92));
-      }
-      return makeJpegPdf(pages, pageW, pageH);
+        const used = sheet.placements.reduce((sum, p) => sum + p.w * p.h, 0);
+        const usedPercent = sheetW && sheetH ? Math.round(used / (sheetW * sheetH) * 100) : 0;
+        ctx.fillStyle = '#444'; ctx.font = '9px "Segoe UI", Tahoma, sans-serif';
+        ctx.fillText(`แผ่น ${sheet.id}  |  ${sheet.placements.length} ชิ้น  |  ใช้พื้นที่ ${usedPercent}%`, cellX + (cellW - drawW) / 2, cellY + cellH + 10);
+      });
+
+      return makeJpegPdf([page.canvas.toDataURL('image/jpeg', .92)], pageW, pageH);
     }
 
     function createCanvasPdfPage(pageW, pageH) {
