@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nice-nesting-v5';
+const CACHE_NAME = 'nice-nesting-v6';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './app-icon.svg', './app-icon-512.png'];
 
 self.addEventListener('install', event => {
