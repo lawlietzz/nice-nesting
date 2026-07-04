@@ -608,6 +608,10 @@
               <option value="split">แยกไฟล์ตามแผ่น</option>
             </select>
           </label>
+          <label class="switch-row">
+            <span>ใส่ชื่อชิ้นงานใน DXF (layer LABEL)</span>
+            <input id="dxfIncludeLabels" type="checkbox">
+          </label>
         </div>
 
         <div class="section">
@@ -750,6 +754,7 @@
       sortMode: document.getElementById('sortMode'),
       randomPasses: document.getElementById('randomPasses'),
       dxfExportMode: document.getElementById('dxfExportMode'),
+      dxfIncludeLabels: document.getElementById('dxfIncludeLabels'),
       sheetCount: document.getElementById('sheetCount'),
       partCount: document.getElementById('partCount'),
       usedPercent: document.getElementById('usedPercent'),
@@ -1252,7 +1257,11 @@
     }
 
     function nextFrame() {
-      return new Promise(resolve => requestAnimationFrame(resolve));
+      // requestAnimationFrame ถูก browser หยุดเมื่อ tab ไม่ active ทำให้คำนวณค้าง
+      return new Promise(resolve => {
+        if (document.hidden) setTimeout(resolve, 0);
+        else requestAnimationFrame(resolve);
+      });
     }
 
     function positive(value) {
@@ -1902,16 +1911,20 @@
       const sheetW = positive(els.sheetW.value);
       const sheetH = positive(els.sheetH.value);
       const gapBetweenSheets = Math.max(sheetW * 0.08, 100);
+      // ค่าเริ่มต้นไม่ใส่ตัวหนังสือ เพื่อให้ไฟล์มีแต่เส้นตัดล้วน ๆ สำหรับส่งร้านตัด
+      const includeLabels = Boolean(els.dxfIncludeLabels && els.dxfIncludeLabels.checked);
       const lines = [];
 
       addDxfHeader(lines);
-      addText(lines, 0, sheetH + 85, 26, `DXF NESTING - ${title}`, 'LABEL');
+      if (includeLabels) addText(lines, 0, sheetH + 85, 26, `DXF NESTING - ${title}`, 'LABEL');
 
       sheets.forEach((sheet, sheetIndex) => {
         const offsetX = sheetIndex * (sheetW + gapBetweenSheets);
         addRectangle(lines, offsetX, 0, sheetW, sheetH, 'SHEET');
-        addText(lines, offsetX + 20, sheetH + 35, 28, `SHEET ${sheet.id}`, 'LABEL');
-        addText(lines, offsetX + 20, -45, 20, `${format(sheetW)} x ${format(sheetH)}`, 'LABEL');
+        if (includeLabels) {
+          addText(lines, offsetX + 20, sheetH + 35, 28, `SHEET ${sheet.id}`, 'LABEL');
+          addText(lines, offsetX + 20, -45, 20, `${format(sheetW)} x ${format(sheetH)}`, 'LABEL');
+        }
 
         sheet.placements.forEach((p, index) => {
           const x = offsetX + p.x;
@@ -1921,7 +1934,7 @@
           } else {
             addRectangle(lines, x, y, p.w, p.h, 'PART');
           }
-          addText(lines, x + 8, y + Math.max(16, p.h - 28), Math.min(24, Math.max(10, p.h / 10)), `${index + 1}. ${p.item.part.name}${p.rotated ? ' R' : ''}`, 'LABEL');
+          if (includeLabels) addText(lines, x + 8, y + Math.max(16, p.h - 28), Math.min(24, Math.max(10, p.h / 10)), `${index + 1}. ${p.item.part.name}${p.rotated ? ' R' : ''}`, 'LABEL');
         });
       });
 
