@@ -2068,6 +2068,8 @@
     }
 
     function addDxfHeader(lines) {
+      // R12 (AC1009) ล้วน เพื่อให้ Adobe Illustrator และเครื่องตัดเปิดได้:
+      // ต้องมีตาราง LTYPE/STYLE ที่ layer และ TEXT อ้างถึง มิฉะนั้น Illustrator จะเปิดไฟล์ไม่ได้
       lines.push(
         '0', 'SECTION',
         '2', 'HEADER',
@@ -2077,6 +2079,17 @@
         '0', 'SECTION',
         '2', 'TABLES',
         '0', 'TABLE',
+        '2', 'LTYPE',
+        '70', '1',
+        '0', 'LTYPE',
+        '2', 'CONTINUOUS',
+        '70', '64',
+        '3', 'Solid line',
+        '72', '65',
+        '73', '0',
+        '40', '0.0',
+        '0', 'ENDTAB',
+        '0', 'TABLE',
         '2', 'LAYER',
         '70', '3'
       );
@@ -2084,6 +2097,20 @@
       addLayer(lines, 'PART', 3);
       addLayer(lines, 'LABEL', 2);
       lines.push(
+        '0', 'ENDTAB',
+        '0', 'TABLE',
+        '2', 'STYLE',
+        '70', '1',
+        '0', 'STYLE',
+        '2', 'STANDARD',
+        '70', '0',
+        '40', '0.0',
+        '41', '1.0',
+        '50', '0.0',
+        '71', '0',
+        '42', '2.5',
+        '3', 'txt',
+        '4', '',
         '0', 'ENDTAB',
         '0', 'ENDSEC',
         '0', 'SECTION',
@@ -2106,20 +2133,12 @@
     }
 
     function addRectangle(lines, x, y, w, h, layer) {
-      lines.push(
-        '0', 'LWPOLYLINE',
-        '8', layer,
-        '90', '4',
-        '70', '1',
-        '10', dxfNumber(x),
-        '20', dxfNumber(y),
-        '10', dxfNumber(x + w),
-        '20', dxfNumber(y),
-        '10', dxfNumber(x + w),
-        '20', dxfNumber(y + h),
-        '10', dxfNumber(x),
-        '20', dxfNumber(y + h)
-      );
+      addPolyline(lines, [
+        { x, y },
+        { x: x + w, y },
+        { x: x + w, y: y + h },
+        { x, y: y + h }
+      ], true, layer);
     }
 
     function addText(lines, x, y, height, text, layer) {
@@ -2128,8 +2147,10 @@
         '8', layer,
         '10', dxfNumber(x),
         '20', dxfNumber(y),
+        '30', '0',
         '40', dxfNumber(height),
-        '1', sanitizeDxfText(text)
+        '1', sanitizeDxfText(text),
+        '7', 'STANDARD'
       );
     }
 
@@ -2148,10 +2169,13 @@
           const c = transform(entity.cx, entity.cy);
           addCircle(lines, c.x, c.y, entity.r, 'PART');
         } else if (entity.type === 'ARC') {
-          const points = arcToPoints(entity, 18).map(point => transform(point.x, point.y));
-          addPolyline(lines, points, false, 'PART');
+          // ส่งออกเป็น ARC จริงเพื่อให้รอยตัดโค้งเนียน ไม่เป็นเหลี่ยม
+          // transform ตอนหมุนคือหมุน -90 องศา มุมของ arc จึงเลื่อนลง 90 องศา
+          const center = transform(entity.cx, entity.cy);
+          const angleShift = placement.rotated ? -90 : 0;
+          addArc(lines, center.x, center.y, entity.r, normalizeAngle(entity.startAngle + angleShift), normalizeAngle(entity.endAngle + angleShift), 'PART');
         } else if (entity.type === 'ELLIPSE_APPROX') {
-          const points = ellipseToPoints(entity, 36).map(point => transform(point.x, point.y));
+          const points = ellipseToPoints(entity, 72).map(point => transform(point.x, point.y));
           addPolyline(lines, points, true, 'PART');
         }
       }
@@ -2185,8 +2209,10 @@
         '8', layer,
         '10', dxfNumber(x1),
         '20', dxfNumber(y1),
+        '30', '0',
         '11', dxfNumber(x2),
-        '21', dxfNumber(y2)
+        '21', dxfNumber(y2),
+        '31', '0'
       );
     }
 
@@ -2196,24 +2222,43 @@
         '8', layer,
         '10', dxfNumber(cx),
         '20', dxfNumber(cy),
+        '30', '0',
         '40', dxfNumber(r)
       );
     }
 
+    function addArc(lines, cx, cy, r, startAngle, endAngle, layer) {
+      lines.push(
+        '0', 'ARC',
+        '8', layer,
+        '10', dxfNumber(cx),
+        '20', dxfNumber(cy),
+        '30', '0',
+        '40', dxfNumber(r),
+        '50', dxfNumber(startAngle),
+        '51', dxfNumber(endAngle)
+      );
+    }
+
     function addPolyline(lines, points, closed, layer) {
+      // R12 ไม่มี LWPOLYLINE ต้องใช้ POLYLINE/VERTEX/SEQEND
       if (!points || points.length < 2) return;
       lines.push(
-        '0', 'LWPOLYLINE',
+        '0', 'POLYLINE',
         '8', layer,
-        '90', String(points.length),
+        '66', '1',
         '70', closed ? '1' : '0'
       );
       for (const point of points) {
         lines.push(
+          '0', 'VERTEX',
+          '8', layer,
           '10', dxfNumber(point.x),
-          '20', dxfNumber(point.y)
+          '20', dxfNumber(point.y),
+          '30', '0'
         );
       }
+      lines.push('0', 'SEQEND', '8', layer);
     }
 
     function arcToPoints(entity, segments) {
@@ -2245,6 +2290,10 @@
 
     function degToRad(value) {
       return value * Math.PI / 180;
+    }
+
+    function normalizeAngle(value) {
+      return ((value % 360) + 360) % 360;
     }
 
     function dxfNumber(value) {
