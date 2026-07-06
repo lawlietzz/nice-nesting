@@ -1071,18 +1071,33 @@
             entityCount++;
           }
         } else {
-          // SPLINE: ยังไม่ประเมินเส้นโค้ง NURBS จริง ใช้จุดควบคุมเป็นเส้นตรงต่อกันไปก่อน
-          let points = readPoints(data);
+          // SPLINE: ประเมินเส้นโค้ง NURBS จริงจาก knots/weights (rational de Boor)
+          // ไม่งั้นรูวงกลมที่ CAD บันทึกเป็น spline จะกลายเป็นเหลี่ยมจากการลากเส้นตรงผ่านจุดควบคุม
+          const flags = Number(data['70']?.[0]) || 0;
+          const closed = Boolean(flags & 1) || Boolean(flags & 2);
+          const degree = Math.max(1, Number(data['71']?.[0]) || 3);
+          const ctrl = readPoints(data);
+          const knots = (data['40'] || []).map(num).filter(Number.isFinite);
+          const weights = (data['41'] || []).map(num);
           const fitXs = (data['11'] || []).map(num);
           const fitYs = (data['21'] || []).map(num);
+          const fit = [];
           for (let k = 0; k < Math.max(fitXs.length, fitYs.length); k++) {
-            if (Number.isFinite(fitXs[k]) && Number.isFinite(fitYs[k])) {
-              points.push({ x: fitXs[k], y: fitYs[k] });
-            }
+            if (Number.isFinite(fitXs[k]) && Number.isFinite(fitYs[k])) fit.push({ x: fitXs[k], y: fitYs[k] });
+          }
+          let points = [];
+          if (ctrl.length >= degree + 1 && knots.length === ctrl.length + degree + 1) {
+            points = sampleNurbs(degree, knots, ctrl, weights, 96);
+          }
+          if (points.length < 2 && fit.length >= 2) {
+            points = sampleCatmullRom(fit, closed, 12);
+          }
+          if (points.length < 2) {
+            points = ctrl.concat(fit);
           }
           points.forEach(p => includePoint(p.x, p.y));
           if (points.length >= 2) {
-            entities.push({ type: 'LWPOLYLINE', points, closed: Boolean(Number(data['70']?.[0]) & 1) });
+            entities.push({ type: 'LWPOLYLINE', points, closed });
             entityCount++;
           }
         }
@@ -1105,6 +1120,76 @@
         entities,
         outline
       };
+    }
+
+    function findKnotSpan(degree, knots, controlCount, t) {
+      if (t >= knots[controlCount]) return controlCount - 1;
+      let span = degree;
+      while (span < controlCount - 1 && t >= knots[span + 1]) span++;
+      return span;
+    }
+
+    function deBoorRational(degree, knots, ctrl, weights, t) {
+      // ประเมิน NURBS แบบ homogeneous coordinates เพื่อรองรับ weight (วงกลมแท้ต้องใช้ rational)
+      const span = findKnotSpan(degree, knots, ctrl.length, t);
+      const d = [];
+      for (let j = 0; j <= degree; j++) {
+        const i = span - degree + j;
+        const w = Number.isFinite(weights[i]) && weights[i] > 0 ? weights[i] : 1;
+        d.push({ x: ctrl[i].x * w, y: ctrl[i].y * w, w });
+      }
+      for (let r = 1; r <= degree; r++) {
+        for (let j = degree; j >= r; j--) {
+          const i = span - degree + j;
+          const denom = knots[i + degree - r + 1] - knots[i];
+          const alpha = denom > 0 ? (t - knots[i]) / denom : 0;
+          d[j] = {
+            x: (1 - alpha) * d[j - 1].x + alpha * d[j].x,
+            y: (1 - alpha) * d[j - 1].y + alpha * d[j].y,
+            w: (1 - alpha) * d[j - 1].w + alpha * d[j].w
+          };
+        }
+      }
+      const result = d[degree];
+      return result.w ? { x: result.x / result.w, y: result.y / result.w } : null;
+    }
+
+    function sampleNurbs(degree, knots, ctrl, weights, samples) {
+      const tStart = knots[degree];
+      const tEnd = knots[ctrl.length];
+      if (!Number.isFinite(tStart) || !Number.isFinite(tEnd) || tEnd <= tStart) return [];
+      const points = [];
+      for (let s = 0; s <= samples; s++) {
+        const t = tStart + (tEnd - tStart) * (s / samples);
+        const point = deBoorRational(degree, knots, ctrl, weights, t);
+        if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) points.push(point);
+      }
+      return points;
+    }
+
+    function sampleCatmullRom(source, closed, perSegment) {
+      const pts = source.slice();
+      if (closed && pts.length > 2) {
+        const first = pts[0], last = pts[pts.length - 1];
+        if (Math.hypot(first.x - last.x, first.y - last.y) < 1e-6) pts.pop();
+      }
+      const n = pts.length;
+      if (n < 3) return pts;
+      const at = i => pts[closed ? ((i % n) + n) % n : Math.min(Math.max(i, 0), n - 1)];
+      const points = [];
+      const segments = closed ? n : n - 1;
+      for (let i = 0; i < segments; i++) {
+        const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+        for (let s = 0; s < perSegment; s++) {
+          const t = s / perSegment, t2 = t * t, t3 = t2 * t;
+          points.push({
+            x: .5 * (2 * p1.x + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+            y: .5 * (2 * p1.y + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3)
+          });
+        }
+      }
+      if (!closed) points.push(pts[n - 1]);
+      return points;
     }
 
     function chooseOuterOutline(entities) {
@@ -2102,12 +2187,26 @@
           ctx.beginPath(); polygon.forEach((point, i) => i ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y)); ctx.closePath();
           ctx.fillStyle = p.color; ctx.globalAlpha = .86; ctx.fill(); ctx.globalAlpha = 1;
           ctx.strokeStyle = '#222'; ctx.lineWidth = .6; ctx.stroke();
-          const label = sheetTotal === 1
-            ? `${index + 1}. ${truncateText(p.item.part.name, 30)}${p.rotated ? ' R' : ''}`
-            : String(index + 1);
-          ctx.fillStyle = '#fff'; ctx.font = 'bold 7px "Segoe UI", Tahoma, sans-serif';
-          if (h > w * 1.35 && w > 10) { ctx.save(); ctx.translate(x + Math.min(w - 3, 9), py + 4); ctx.rotate(Math.PI / 2); ctx.fillText(label, 0, 0); ctx.restore(); }
-          else if (w > 16 && h > 9) ctx.fillText(label, x + 3, py + 9);
+          // ใส่ชื่อไฟล์บนชิ้นงานทุกชิ้น ถ้าที่ไม่พอค่อยลดรูปเหลือชื่อย่อ/เลขลำดับ
+          const baseName = String(p.item.part.name).replace(/\.dxf$/i, '');
+          const rotatedLabel = h > w * 1.35 && w > 8;
+          const room = (rotatedLabel ? h : w) - 5;
+          const fontSize = sheetTotal === 1 ? 7 : Math.max(4.5, Math.min(6.5, (rotatedLabel ? w : h) * 0.5));
+          ctx.font = `bold ${fontSize}px "Segoe UI", Tahoma, sans-serif`;
+          const fitLabel = (text) => {
+            if (ctx.measureText(text).width <= room) return text;
+            for (let cut = text.length - 1; cut > 2; cut--) {
+              const short = text.slice(0, cut) + '…';
+              if (ctx.measureText(short).width <= room) return short;
+            }
+            return '';
+          };
+          let label = fitLabel(`${index + 1}.${baseName}${p.rotated ? ' R' : ''}`);
+          if (!label) label = fitLabel(String(index + 1));
+          if (!label) return;
+          ctx.fillStyle = '#fff';
+          if (rotatedLabel) { ctx.save(); ctx.translate(x + Math.min(w - 2, 3 + fontSize), py + 3); ctx.rotate(Math.PI / 2); ctx.fillText(label, 0, 0); ctx.restore(); }
+          else ctx.fillText(label, x + 2.5, py + 2.5 + fontSize);
         });
         const used = sheet.placements.reduce((sum, p) => sum + p.w * p.h, 0);
         const usedPercent = sheetW && sheetH ? Math.round(used / (sheetW * sheetH) * 100) : 0;
